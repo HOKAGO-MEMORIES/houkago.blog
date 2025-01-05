@@ -36,25 +36,25 @@ export default function Nav() {
 }
 
 export function NavItem({
-    href,
-    label,
-    external,
-    onClick,
+	href,
+	label,
+	external,
+	onClick,
 }: Nav & { onClick?: () => void }) {
-    const pathname = usePathname();
+	const pathname = usePathname();
 
-    return (
-        <Link
-            href={href}
-            className={cn(
-                "transition-colors hover:font-black py-3 text-primary font-bold flex items-center",
-                pathname?.startsWith(href) && "underline underline-offset-4 font-black",
-            )}  
-            target={external ? "_blank" : undefined}     
-            onClick={onClick}
-        >
-            {label.toUpperCase()}
-            {external && <ArrowUpRight className="h-4 w-4" />}
-        </Link>
-    )
+	return (
+		<Link
+			href={href}
+			className={cn(
+				"transition-colors hover:font-black py-3 text-primary font-bold flex items-center",
+				pathname?.startsWith(href) && "underline underline-offset-4 font-black",
+			)}
+			target={external ? "_blank" : undefined}
+			onClick={onClick}
+		>
+			{label.toUpperCase()}
+			{external && <ArrowUpRight className="h-4 w-4" />}
+		</Link>
+	);
 }
