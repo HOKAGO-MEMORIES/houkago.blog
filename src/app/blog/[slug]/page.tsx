@@ -2,15 +2,11 @@ import { blogPosts } from "#posts";
 import { notFound } from "next/navigation";
 import { MDXContent } from "./components/mdx-content"
 
-interface Props {
-    params: {
-        slug: string;
-    };
-}
+export type ParamsType = Promise<{ slug: string }>;
 
-export default async function PostPage({ params }: Props) {
-    const { slug } = await params;
-    const post = getPageBySlug(slug)
+export default async function PostPage(props: { params: ParamsType }) {
+    const { slug } = await props.params;
+    const post = getPageBySlug(slug);
 
     if (!post) {
         notFound();
