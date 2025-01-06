@@ -2,18 +2,18 @@ import rehypePrettyCode from "rehype-pretty-code";
 import { defineConfig, s } from "velite";
 
 export default defineConfig({
-	root: "posts",
+	root: "src",
 	collections: {
 		blogPosts: {
 			name: "Blog",
-			pattern: "blog/*.mdx",
+			pattern: "posts/*.mdx",
 			schema: s
 				.object({
 					title: s.string().max(99),
-					description: s.string().max(99),
+					desc: s.string().max(99),
 					slug: s.path(),
 					date: s.string(),
-					thumbnailUrl: s.string().max(99),
+					thumbnail: s.string().max(99),
 					body: s.mdx(),
 				})
 				.transform((data) => ({
