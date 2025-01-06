@@ -1,7 +1,7 @@
 import PageLayout from "@/components/page-layout";
 import Image from "next/image";
 import Link from "next/link";
-import { blogPosts } from "!posts"
+import { blogPosts } from "#posts"
 
 export default function Blog() {
     return (
