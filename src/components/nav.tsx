@@ -17,8 +17,8 @@ export const navs = [
         label: "Blog",
     },
     {
-        href: "/project",
-        label: "Project",
+        href: "/projects",
+        label: "Projects",
     },
 ];
 
