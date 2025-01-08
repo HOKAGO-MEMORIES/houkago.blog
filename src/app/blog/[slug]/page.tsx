@@ -4,7 +4,7 @@ import { MDXContent } from "./components/mdx-content"
 
 export type ParamsType = Promise<{ slug: string }>;
 
-export default async function PostPage(props: { params: ParamsType }) {
+export default async function BlogPage(props: { params: ParamsType }) {
     const { slug } = await props.params;
     const post = getPageBySlug(slug);
 
