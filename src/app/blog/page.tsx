@@ -5,10 +5,7 @@ import { blogPosts } from "#posts"
 
 export default function Blog() {
     return (
-        <PageLayout
-            title="Blog"
-            description="블로그 글을 작성해봅시다!"
-        >
+        <PageLayout title="Blog" description="블로그 글을 작성해봅시다!">
             <div className="flex flex-col">
                 {blogPosts
                     .sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)))
@@ -36,8 +33,7 @@ export default function Blog() {
                     ))
                 }
             </div>
-        </PageLayout>
-  
+        </PageLayout> 
     );
   }
   
