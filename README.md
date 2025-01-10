@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# houkago.blog
 
-## Getting Started
+My Personal Blog
 
-First, run the development server:
+> 도메인을 구매하여 주소를 바꾸려고 합니다.  
+> [.moe](https://get.moe/) 사용 예정..
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## TODO
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- [x] 내비게이션 생성
+- [ ] 모바일 내비게이션 생성성
+- [x] 블로그 페이지 생성  
+- [x] 프로젝트 페이지 생성  
+- [x] 테스트 포스트 작성  
+- [ ] favicon 설정  
+- [ ] 폰트 설정  
+- [ ] 블로그 메인 컬러 설정  
+- [ ] 메인 페이지 수정  
+- [ ] 포스트 작성  
+- [ ] 알고리즘 문제 페이지 생성  
+- [ ] 알고리즘 문제 포스트 템플릿 생성   
+- [ ] 백엔드를 활용할 프로젝트 구상  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech
+- Framework : [Next.js](https://nextjs.org/docs/app/getting-started)
+- Design : [Tailwind CSS](https://tailwindcss.com/docs/installation) + [Shadcn/ui](https://ui.shadcn.com/docs)
+- Writing : [MDX](https://mdxjs.com/)
+- Post Parsing : [Velite](https://velite.js.org/guide/quick-start) + [rehypePrettyCode](https://velite.js.org/guide/code-highlighting) 
+- Deploy : [Vercel](https://vercel.com/home)
