@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 
 const nanumSquareNeo = localFont({
-    src: "./NanumSquareNeo-Variable.woff2",
+    src: "./PretendardVariable.woff2",
     display: "swap",
 });
 
