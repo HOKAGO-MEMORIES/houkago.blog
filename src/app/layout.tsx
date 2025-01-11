@@ -3,6 +3,8 @@ import "@/style/globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { nanumSquareNeo } from "@/style/fonts/fonts";
+
 
 export const metadata: Metadata = {
   title: "방과후 블로그",
@@ -15,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" className={nanumSquareNeo.className} suppressHydrationWarning>
       <body className="max-w-screen-md min-w-[320px] mx-auto">
         <ThemeProvider
 					attribute="class"

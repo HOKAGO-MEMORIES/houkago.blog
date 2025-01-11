@@ -14,7 +14,7 @@ export default function ProjectsPage() {
                 >  
                     {p.title}
                 </Link>
-                <p className="text-sm text-gray-600 mt-1">{p.description}</p> {/* 설명 */}
+                <p className="text-sm text-gray-600 mt-1">{p.description}</p>
                 </div>
             ))}
         </div>
