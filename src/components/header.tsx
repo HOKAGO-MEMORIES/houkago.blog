@@ -4,12 +4,14 @@ import { Home, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Nav from "./nav";
+import NavMobile from "./nav-mobile";
 import { Button } from "./ui/button";
 
 export default function Header() {
     return (
         <header className="h-14 px-5 sticky top-0 z-50 w-full border-b flex justify-between items-center bg-background">
             <div className="flex items-center">
+                <NavMobile />
                 <Nav />
 
             </div>
