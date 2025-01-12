@@ -26,7 +26,12 @@ export default function RecentPosts() {
                                 </span>
                                 <span className="break-all">{post.desc}</span>
                             </div>
-                            <time className="text-xs ml-auto">{post.date}</time>
+                            <div className="flex flex-col ml-auto">
+                                <span className="break-keep ml-auto text-primary">
+                                    {post.from}
+                                </span>
+                                <time className="text-xs">{post.date}</time>
+                            </div>                            
                         </Link>
                 ))}
             </div>

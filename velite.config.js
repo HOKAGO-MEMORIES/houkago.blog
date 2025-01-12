@@ -15,6 +15,7 @@ export default defineConfig({
 					date: s.string(),
 					thumbnail: s.string().max(99),
 					body: s.mdx(),
+					from: s.string().max(99),
 				})
 				.transform((data) => ({
 					...data,
@@ -32,6 +33,7 @@ export default defineConfig({
 					slug: s.path(),
 					date: s.string(),
 					body: s.mdx(),
+					from: s.string().max(99),
 				})
 				.transform((data) => ({
 					...data,
