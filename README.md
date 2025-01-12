@@ -5,7 +5,17 @@ My Personal Blog
 > 도메인을 구매하여 주소를 바꾸려고 합니다.  
 > [.moe](https://get.moe/) 사용 예정..
 
-## TODO
+## Tech
+- Framework : [Next.js](https://nextjs.org/docs/app/getting-started)
+- Design : [Tailwind CSS](https://tailwindcss.com/docs/installation) + [Shadcn/ui](https://ui.shadcn.com/docs)
+- Writing : [MDX](https://mdxjs.com/)
+- Post Parsing : [Velite](https://velite.js.org/guide/quick-start) + [rehypePrettyCode](https://velite.js.org/guide/code-highlighting) 
+- Deploy : [Vercel](https://vercel.com/home)
+
+<br>
+
+<details>
+<summary>TODO</summary>
 
 - [x] 내비게이션 생성
 - [x] 모바일 내비게이션 생성
@@ -20,10 +30,4 @@ My Personal Blog
 - [x] 알고리즘 문제 페이지 생성  
 - [ ] 알고리즘 문제 포스트 템플릿 생성   
 - [ ] 백엔드를 활용할 프로젝트 구상  
-
-## Tech
-- Framework : [Next.js](https://nextjs.org/docs/app/getting-started)
-- Design : [Tailwind CSS](https://tailwindcss.com/docs/installation) + [Shadcn/ui](https://ui.shadcn.com/docs)
-- Writing : [MDX](https://mdxjs.com/)
-- Post Parsing : [Velite](https://velite.js.org/guide/quick-start) + [rehypePrettyCode](https://velite.js.org/guide/code-highlighting) 
-- Deploy : [Vercel](https://vercel.com/home)
+</details>
