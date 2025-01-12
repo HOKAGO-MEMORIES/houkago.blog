@@ -22,6 +22,23 @@ export default defineConfig({
 					slug: data.slug.replaceAll("blog/", ""),
 				})),
 		},
+		psPosts: {
+			name: "PS",
+			pattern: "ps/*.mdx",
+			schema: s
+				.object({
+					title: s.string().max(99),
+					desc: s.string().max(99),
+					slug: s.path(),
+					date: s.string(),
+					body: s.mdx(),
+				})
+				.transform((data) => ({
+					...data,
+					permalink: `/${data.slug}`,
+					slug: data.slug.replaceAll("ps/", ""),
+				})),
+		}
 	},
 	output: {
 		data: ".velite",
