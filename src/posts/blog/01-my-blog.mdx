@@ -1,0 +1,92 @@
+---
+title: Next.js로 블로그 만들기 
+date: 2025-01-12  
+desc: 시즌 n번 째 시도   
+thumbnail: /posts/thumbnail/01-my-blog.webp  
+from: BLOG  
+---
+
+## 만들게 된 이유  
+
+지금 이 블로그를 만들기 전에 몇 개의 블로그를 운영했었다.   
+깃허브 블로그, 벨로그, 노션 등을 써봤는데 그렇게 오래가지 못했다.  
+
+![](/posts/01-my-blog/1.png)
+깃허브 블로그는 레포를 fork해서 사용하다 보니 버전 관리도 어려웠다.  
+오류 메시지도 제대로 뜨지 않아 오류를 해결할 때에도 긴 시간이 걸렸다.  
+포스트 하나를 커밋할 때마다 오류가 속출하니 점점 지쳐서 손을 놓게 됐다.  
+
+벨로그나 노션은 이미 만들어진 플랫폼이어서 거기에 적응하는게 쉽지 않았다.  
+그러다 보니 블로그를 운영하는 것에 애착이 생기지 않아 관리를 안 하게 됐다.  
+
+그렇게 핑계아닌 핑계로 여기까지 왔고, 새로 블로그를 만들게 됐다.  
+
+
+## 제작 과정  
+
+블로그를 최대한 빨리 만들고 싶어서 다른 블로그를 많이 참고했다.  
+- [김도형 님의 블로그](https://d5br5.dev/blog/nextjs_blog/setup)
+- [정미량 님의 블로그](https://miryang.dev/blog/build-blog-with-nextjs)
+- [권용빈 님의 블로그](https://yiyb-blog.vercel.app/)
+- [박영웅 님의 블로그](https://www.heropy.dev/)
+
+특히 정미량님의 블로그를 많이 참고했다.  
+혹시 이 블로그를 보실 일이 있을지는 모르겠지만 감사하다는 말씀드리고 싶다.  
+
+### 블로그 기능  
+
+블로그를 하면서 구현하고 싶었던 기능은 아래와 같다.  
+- 게시글을 목록 페이지
+- 프로젝트 목록 페이지
+- 다크 모드
+- 내비게이션 바
+
+처음에는 최소한의 기능만 구현해 빠르게 블로그를 이용하고 싶었다.  
+
+### 기술 스택  
+
+깃허브 블로그를 검색해봤을 때 Jekyll을 제외한 다른 것을 찾아보니 Next.js를 알게 되었다.  
+그리고 Next.js를 이용해서 개발한 블로그를 참고하니 자연스럽게 따라갔다.  
+
+
+#### 1. Framework : [Next.js](https://nextjs.org/docs/app/getting-started)  
+React 기반의 SSR/SSG* 프레임워크로, SEO*와 퍼포먼스 최적화가 가능하며, 동적 라우팅과 API 연동이 쉬워 블로그 제작에 적합하다고 한다.   
+> - SSR (Server-Side-Rendering) : 요청 때마다 HTML을 생성  
+> - SSG (Static-Site-Generation) : 빌드할 때 HTML를 생성  
+> - SEO (Search Engine Optimization) : 검색 엔진에서의 노출도를 높이도록 사이트를 개선하는 최적화 작업  
+
+#### 2. Design : [Tailwind CSS](https://tailwindcss.com/docs/installation) + [Shadcn/ui](https://ui.shadcn.com/docs)  
+Tailwind CSS는 유틸리티 클래스 기반의 CSS 프레임워크로, class 부분에 tailwindcss 구문을 넣으면 되는데 생각보다 간단해서 놀랐다.  
+Shadcn/ui는 Tailwind와 호환되는 컴포넌트 라이브러리로, 패키지를 다운 받는 것으로 다양한 UI를 빠르게 구현할 수 있다.  
+
+#### 3. Writing : [MDX](https://mdxjs.com/)  
+기본적인 MD에 JSX 문법을 추가로 사용할 수 있는 MDX를 사용했다.  
+
+#### 4. Post Parsing : [Velite](https://velite.js.org/guide/quick-start) + [rehypePrettyCode](https://velite.js.org/guide/code-highlighting)  
+괴거에는 다른 것을 사용한거 같은데 Velite가 더 간단하게 MDX 파일을 파싱하여 사용했다.  
+rehypePrettyCode는 코드 하이라이팅을 제공해 가독성을 높여 주였다.  
+
+
+#### 5. Deploy : [Vercel](https://vercel.com/home)  
+Next.js는 Vercel에서 만든 프레임워크기 때문에 호환성이 매우 높다. 
+정말 간단하게 배포할 수 있어서 사용했다.  
+
+## 이후 목표  
+
+여기에서 더 추가하고 싶은 기능은 아래와 같다.  
+- 댓글 기능
+- 좋아요 기능
+- 카테고리 기능
+- 구글 애널리틱스 연결
+- 최상단 최하단으로 이동 기능
+
+개발도 중요하지만 글 쓰는 것도 중요하기에 기능은 차근차근 추가할 예정이다.  
+
+## 느낀점  
+
+체계적인 학습을 받은 다음에 개발을 한게 아니다 보니...  
+폰트 하나를 추가하는 데에도 지워야 할 코드 몇 줄을 찾아내지 못해서 몇 시간 동안 쩔쩔맨다던가,  
+코드는 다 작성해 놓고 정작 패키지를 설치 안 해서 오류가 발생했다든가 하는 우여곡절이 많았다.  
+
+그래도 나만의 홈페이지가 생겼다고 하니 더 애착이 가는 건 사실이다.  
+이러니 많은 사람들이 개발을 꿈꾸는게 아닐지 생각이 든다.  
