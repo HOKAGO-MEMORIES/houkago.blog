@@ -1,34 +1,18 @@
-import { cn } from "@/components/ui/utils";
-import * as runtime from 'react/jsx-runtime';
+"use client"
+
+import React from "react";
+import dynamic from "next/dynamic";
+
+const MarkdownRenderer = dynamic(() => import("@/components/markdown-renderer"), { ssr: false });
 
 interface MDXProps {
-    code: string;
+  content: string;
 }
 
-const components = {
-	a: ({ className, ...props }: React.HTMLAttributes<HTMLAnchorElement>) => (
-		<a
-			target="_blank"
-			rel="noopener"
-			{...props}
-			className={cn([className, "text-primary"])}
-		/>
-	),
+export const MDXContent = ({ content }: MDXProps) => {
+  return (
+    <div className="prose prose-slate dark:prose-invert flex-1">
+      <MarkdownRenderer content = {content} />
+    </div>
+  );
 };
-
-const useMDXComponent = (code: string) => {
-    const fn = new Function(code);
-    return fn({ ...runtime }).default;
-}
-
-
-
-export const MDXContent = ({ code }: MDXProps) => {
-    const Component = useMDXComponent(code);
-
-    return (
-        <div className="prose prose-slate dark:prose-invert flex-1">
-            <Component components={ components } />
-        </div>
-    );
-}
