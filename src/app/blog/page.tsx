@@ -11,7 +11,7 @@ export default function Blog() {
                     .sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)))
                     .map((blog) => (
                         <Link
-                            href={`${blog.permalink}`}
+                            href={`${"blog/" + blog.permalink}`}
                             key={blog.slug}
                             className="flex py-5 items-center justify-between gap-2 border-b last:border-none"
                         >

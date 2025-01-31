@@ -10,7 +10,7 @@ export default function PS() {
                     .sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)))
                     .map((ps) => (
                         <Link
-                            href={`${ps.permalink}`}
+                            href={`${"ps/" + ps.permalink}`}
                             key={ps.slug}
                             className="flex py-5 items-center justify-between gap-2 border-b last:border-none"
                         >
