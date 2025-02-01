@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { exec } = require('child_process');
 
-const url = `${process.env.API_BASE_URL}/generate-json`;
+const url = process.env.API_URL;
 const blogRoot = process.cwd().replace(/\\/g, "/");
 const jsonBody = `"{\\"blogRoot\\": \\"${blogRoot}\\"}"`;
 
@@ -14,6 +14,6 @@ exec(curlCommand, (error, stdout, stderr) => {
         return;
     }
 
-    console.log('Generated JSON files successfully');
+    console.log('✅ Generated JSON files successfully');
     console.log(stdout);
 });
