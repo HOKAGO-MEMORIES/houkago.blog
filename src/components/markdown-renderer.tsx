@@ -10,9 +10,10 @@ interface MarkdownRendererProps {
 const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
     return (
         <ReactMarkdown
-            children={content}
             // rehypePlugins={[[rehypePrettyCode, { theme: "nord", async: true }]]}
-        />
+        >
+            {content}
+        </ReactMarkdown>
     );
 };
 

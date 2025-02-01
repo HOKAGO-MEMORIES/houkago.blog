@@ -1,9 +1,9 @@
-require('dotenv').config();
-const { exec } = require('child_process');
+import 'dotenv/config'
+import { exec } from 'child_process';
 
 const url = process.env.API_URL;
 const blogRoot = process.cwd().replace(/\\/g, "/");
-const jsonBody = `"{\\"blogRoot\\": \\"${blogRoot}\\"}"`;
+const jsonBody = JSON.stringify({ blogRoot });
 
 const curlCommand = `curl -X POST ${url} -H "Content-Type: application/json" -d ${jsonBody}`;
 

@@ -9,9 +9,13 @@ export interface Post {
     permalink: string;
 }
 
-export interface BlogPost extends Post {}
+export interface BlogPost extends Post {
+    type: 'blog';
+}
 
-export interface PSPost extends Post {}
+export interface PSPost extends Post {
+    type: 'ps';
+}
 
 export interface PostsData {
     blogPosts: BlogPost[];

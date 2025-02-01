@@ -28,7 +28,7 @@ export default function RecentPosts() {
                             </div>
                             <div className="flex flex-col ml-auto">
                                 <span className="break-keep ml-auto text-primary">
-                                    {post.from}
+                                    {post.category}
                                 </span>
                                 <time className="text-xs">{post.date}</time>
                             </div>                            

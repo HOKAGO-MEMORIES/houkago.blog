@@ -2,6 +2,7 @@
   "name": "houkago.blog",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "prebuild": "node ./src/scripts/generate-json.js",
     "predev": "node ./src/scripts/generate-json.js",
