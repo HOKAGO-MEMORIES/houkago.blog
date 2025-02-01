@@ -5,7 +5,7 @@ const url = process.env.API_URL;
 const blogRoot = process.cwd().replace(/\\/g, "/");
 const jsonBody = (JSON.stringify({ blogRoot })).replace(/"/g, '\\"');
 
-const curlCommand = `curl -X POST ${url} -H "Content-Type: application/json" -d "${jsonBody}"`;
+const curlCommand = `curl -X POST "${url}" -H "Content-Type: application/json" -d "${jsonBody}"`;
 
 exec(curlCommand, (error, stdout, stderr) => {
     if (error) {
