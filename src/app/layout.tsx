@@ -3,7 +3,7 @@ import "@/style/globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
-import { nanumSquareNeo } from "@/style/fonts/fonts";
+import { pretendard } from "@/style/fonts/fonts";
 
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={nanumSquareNeo.className} suppressHydrationWarning>
+    <html lang="ko" className={pretendard.className} suppressHydrationWarning>
       <body className="max-w-screen-md min-w-[320px] mx-auto">
         <ThemeProvider
 					attribute="class"

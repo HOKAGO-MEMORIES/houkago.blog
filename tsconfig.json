@@ -20,8 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "#posts": ["./.velite"],
-      "#mdx-content": ["./src/app/blog/[slug]/components/mdx-content.tsx"]
+      "#posts": ["./.posts"],
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

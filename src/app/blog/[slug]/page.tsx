@@ -1,6 +1,6 @@
 import { blogPosts } from "#posts";
 import { notFound } from "next/navigation";
-import { MDXContent } from "./components/mdx-content"
+import { MDXContent } from "@/components/mdx-content"
 
 export type ParamsType = Promise<{ slug: string }>;
 
@@ -20,7 +20,7 @@ export default async function BlogPage(props: { params: ParamsType }) {
             <time className="text-primary font-medium text-sm mt-2 mb-10 ml-auto">
                 {post.date}
             </time>
-            <MDXContent code={post.body} />
+            <MDXContent content={post.body} />
         </div>
     );
 }
