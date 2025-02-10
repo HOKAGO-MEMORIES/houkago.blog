@@ -16,7 +16,7 @@ export default function RecentPosts() {
                     .slice(0, 5)
                     .map((post) => (
                         <Link
-                            href={`${post.permalink}`}
+                            href={`${(post.category).toLowerCase()}${post.permalink}`}
                             key={post.slug}
                             className="flex py-5 gap-2 flex-1 border-b last:border-none"
                         >
