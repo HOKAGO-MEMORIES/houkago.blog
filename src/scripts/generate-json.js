@@ -28,9 +28,16 @@ async function downloadFile(fileName) {
     if (!fileResponse.ok)
         throw new Error(`❌ Failed to download ${fileName}`);
 
-    const arrayBuffer = await fileResponse.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(path.join(POSTS_DIR, fileName), buffer);
+    let content = await fileResponse.text();
+
+    if (fileName.endsWith('.ts')) {
+        content = content.replace(/^"|"$/g, '');
+        content = content.replace(/\\n/g, '\n');
+    }
+
+    const filePath = path.join(POSTS_DIR, fileName);
+    fs.writeFileSync(filePath, content);
+
     console.log(`✅ Downloaded: ${fileName}`);
 }
 
