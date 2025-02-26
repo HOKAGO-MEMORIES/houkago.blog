@@ -1,21 +1,14 @@
-import React from "react";
-import ReactMarkdown from "react-markdown";
-// import rehypePrettyCode from "rehype-pretty-code";
+"use client";
 
+import React from "react";
+import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 
 interface MarkdownRendererProps {
-    content: string;
+  mdxSource: MDXRemoteSerializeResult;
 }
 
-const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
-    return (
-        <ReactMarkdown
-            // rehypePlugins={[[rehypePrettyCode, { theme: "nord", async: true }]]}
-        >
-            {content}
-        </ReactMarkdown>
-    );
+const MarkdownRenderer = ({ mdxSource }: MarkdownRendererProps) => {
+  return <MDXRemote {...mdxSource} />;
 };
-
 
 export default MarkdownRenderer;

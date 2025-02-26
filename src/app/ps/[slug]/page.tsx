@@ -1,6 +1,7 @@
 import { psPosts } from "#posts";
 import { notFound } from "next/navigation";
 import { MDXContent } from "@/components/mdx-content"
+import { getSerializedMDX } from "@/util/mdx";
 
 export type ParamsType = Promise<{ slug: string }>;
 
@@ -11,6 +12,8 @@ export default async function PSPage(props: { params: ParamsType }) {
     if (!post) {
         notFound();
     }
+
+    const mdxSource = await getSerializedMDX(post.body);
     
     return (
         <div className="flex flex-col mt-5 gap-2">
@@ -20,7 +23,7 @@ export default async function PSPage(props: { params: ParamsType }) {
             <time className="text-primary font-medium text-sm mt-2 mb-10 ml-auto">
                 {post.date}
             </time>
-            <MDXContent content={post.body} />
+            <MDXContent mdxSource={mdxSource} />
         </div>
     );
 }

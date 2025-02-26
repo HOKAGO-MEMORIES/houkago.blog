@@ -55,7 +55,65 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		  typography: {
+			DEFAULT: {
+			  css: {
+				color: "hsl(var(--foreground))",
+				a: {
+				  color: "hsl(var(--primary))",
+				  "&:hover": {
+					color: "hsl(var(--primary-foreground))",
+				  },
+				},
+				h1: {
+				  fontSize: "2.25rem",
+				  fontWeight: "bold",
+				  color: "hsl(var(--foreground))",
+				},
+				h2: {
+				  fontSize: "1.875rem",
+				  fontWeight: "semibold",
+				  color: "hsl(var(--foreground))",
+				},
+				h3: {
+				  fontSize: "1.5rem",
+				  fontWeight: "semibold",
+				  color: "hsl(var(--foreground))",
+				},
+				pre: {
+				  backgroundColor: "hsl(var(--muted))",
+				  color: "hsl(var(--foreground))",
+				  padding: "1rem",
+				  borderRadius: "0.5rem",
+				  overflowX: "auto",
+				},
+				code: {
+				  backgroundColor: "hsl(var(--muted))",
+				  padding: "0.25rem 0.5rem",
+				  borderRadius: "4px",
+				},
+			  },
+			},
+			dark: {
+			  css: {
+				color: "hsl(var(--foreground))",
+				a: {
+				  color: "hsl(var(--primary))",
+				  "&:hover": {
+					color: "hsl(var(--primary-foreground))",
+				  },
+				},
+				pre: {
+				  backgroundColor: "hsl(var(--muted))",
+				},
+				code: {
+				  backgroundColor: "hsl(var(--muted))",
+				},
+			  },
+			},
+		  },
+		
   	}
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],

@@ -1,18 +1,22 @@
-"use client"
+"use client";
 
 import React from "react";
 import dynamic from "next/dynamic";
+import { MDXRemoteSerializeResult } from "next-mdx-remote";
 
-const MarkdownRenderer = dynamic(() => import("@/components/markdown-renderer"), { ssr: false });
+const MarkdownRenderer = dynamic(
+  () => import("@/components/markdown-renderer"),
+  { ssr: false }
+);
 
 interface MDXProps {
-  content: string;
+  mdxSource: MDXRemoteSerializeResult;
 }
 
-export const MDXContent = ({ content }: MDXProps) => {
+export const MDXContent = ({ mdxSource }: MDXProps) => {
   return (
     <div className="prose prose-slate dark:prose-invert flex-1">
-      <MarkdownRenderer content = {content} />
+      <MarkdownRenderer mdxSource={mdxSource} />
     </div>
   );
 };
