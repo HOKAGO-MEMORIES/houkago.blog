@@ -6,6 +6,11 @@ export type Project = {
 
 export const projects: Project[] = [
     {
+        title: "houkago.server",
+        description: "이 블로그의 백엔드 서버",
+        link: "https://github.com/HOKAGO-MEMORIES/houkago.server",
+    },
+    {
         title: "houkago.blog",
         description: "현재 보고 있는 이 블로그",
         link: "https://github.com/HOKAGO-MEMORIES/houkago.blog",
