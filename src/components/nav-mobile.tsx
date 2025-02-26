@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { NavItem, navs } from "./nav";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "./ui/sheet";
 import { ChevronRightIcon } from "lucide-react";
+import { VisuallyHidden } from "./ui/visually-hidden";
 
 export default function NavMobile() {
     const [open, setOpen] = useState(false);
@@ -17,6 +18,9 @@ export default function NavMobile() {
                 </Button>
             </SheetTrigger>
             <SheetContent side="left">
+                <VisuallyHidden>
+                    <SheetTitle>Navigation</SheetTitle>
+                </VisuallyHidden>
                 <div className="flex flex-col gap-2">
                     {navs.map(({ href, label }) => (
                         <NavItem
