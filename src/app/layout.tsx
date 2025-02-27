@@ -4,6 +4,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { pretendard } from "@/style/fonts/fonts";
+import GoogleAnalytics from "@/lib/google-analytics"; 
 
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.className} suppressHydrationWarning>
       <body className="max-w-screen-md min-w-[320px] mx-auto">
+        <GoogleAnalytics />
         <ThemeProvider
 					attribute="class"
 					defaultTheme="light"
