@@ -6,12 +6,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { pretendard } from "@/style/fonts/fonts";
 import GoogleAnalytics from "@/lib/google-analytics"; 
 
-
-export const metadata: Metadata = {
-  title: "방과후 블로그",
-  description: "블로그를 건설 중입니다...",
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -39,3 +33,26 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+export const metadata: Metadata = {
+  title: "방과후 블로그",
+  description: "모든게 시작되는 시간",
+  metadataBase: new URL("https://houkago.moe"),
+  openGraph: {
+    title: "방과후 블로그",
+    description: "모든게 시작되는 시간",
+    url: "https://houkago.moe",
+    siteName: "방과후 블로그",
+    images: [
+      {
+        url: "/home/main.jpg",
+        width: 1200,
+        height: 630,
+        alt: "방과후 블로그",
+      }
+    ],
+    locale: "ko_KR",
+    type: "website",
+  },
+};
