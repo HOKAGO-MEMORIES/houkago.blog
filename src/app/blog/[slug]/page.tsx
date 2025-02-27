@@ -1,7 +1,7 @@
 import { blogPosts } from "#posts";
 import { notFound } from "next/navigation";
 import { MDXContent } from "@/components/mdx-content"
-import { getSerializedMDX } from "@/util/mdx";
+import { getSerializedMDX } from "@/lib/mdx";
 
 export type ParamsType = Promise<{ slug: string }>;
 
