@@ -4,8 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prebuild": "node ./src/scripts/generate-json.js",
-    "predev": "node ./src/scripts/generate-json.js",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

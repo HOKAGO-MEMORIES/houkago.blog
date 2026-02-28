@@ -39,7 +39,7 @@ const psPosts = defineCollection({
 });
 
 export default defineConfig({
-	root: "http://localhost:8080/api/posts",
+	root: ".posts",
 	output: {
 		data: ".velite",
 		assets: "public/static",
