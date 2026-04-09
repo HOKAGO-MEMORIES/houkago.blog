@@ -1,23 +1,27 @@
-export interface Post {
-    title: string;
-    desc: string;
-    slug: string;
-    date: string;
-    thumbnail?: string;
-    body: string;
-    category: string;
-    permalink: string;
-}
+export type Category = "algorithm" | "project" | "cs" | "blog";
+export type PostStatus = "draft" | "published" | "archived";
 
-export interface BlogPost extends Post {
-    type: 'blog';
-}
+export type Post = {
+  title: string;
+  slug: string;
+  date: string;
+  description: string;
+  category: Category;
+  status: PostStatus;
+  tags: string[];
+  updated?: string;
+  thumbnail?: string;
+  series?: string;
+  featured?: boolean;
+  draftNote?: string;
+  body: string;
+  path: string;
+};
 
-export interface PSPost extends Post {
-    type: 'ps';
-}
-
-export interface PostsData {
-    blogPosts: BlogPost[];
-    psPosts: PSPost[];
-}
+export type PostManifest = {
+  version: number;
+  generatedAt: string;
+  sourcePath: string;
+  publicAssetBase: string;
+  posts: Post[];
+};

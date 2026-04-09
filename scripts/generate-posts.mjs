@@ -1,0 +1,409 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const ALLOWED_CATEGORIES = ["algorithm", "project", "cs", "blog"];
+const ALLOWED_STATUSES = ["draft", "published", "archived"];
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const POSTS_REPO_PATH = process.env.POSTS_REPO_PATH
+  ? path.resolve(process.cwd(), process.env.POSTS_REPO_PATH)
+  : path.resolve(process.cwd(), "..", "houkago.posts");
+const GENERATED_DIR = path.resolve(process.cwd(), ".generated");
+const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
+const PUBLIC_ASSET_ROOT = path.resolve(process.cwd(), "public", "generated", "posts");
+const PUBLIC_ASSET_BASE = "/generated/posts";
+
+function main() {
+  ensureDirectoryExists(POSTS_REPO_PATH, `Posts repository not found: ${POSTS_REPO_PATH}`);
+  resetDirectory(GENERATED_DIR);
+  resetDirectory(PUBLIC_ASSET_ROOT);
+
+  const errors = [];
+  const slugSet = new Map();
+  const discoveredIndexFiles = findIndexFiles(POSTS_REPO_PATH, errors);
+  const posts = [];
+
+  for (const indexFilePath of discoveredIndexFiles) {
+    try {
+      const post = buildPost(indexFilePath, slugSet);
+      posts.push(post);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  if (discoveredIndexFiles.length === 0) {
+    errors.push(`No post files were found in ${POSTS_REPO_PATH}. Expected {category}/{slug}/index.md.`);
+  }
+
+  if (errors.length > 0) {
+    console.error("Post content validation failed.");
+    for (const error of errors) {
+      console.error(`- ${error}`);
+    }
+    process.exit(1);
+  }
+
+  const manifest = {
+    version: 1,
+    generatedAt: new Date().toISOString(),
+    sourcePath: POSTS_REPO_PATH,
+    publicAssetBase: PUBLIC_ASSET_BASE,
+    posts: posts.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug)),
+  };
+
+  fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  console.log(`Generated ${manifest.posts.length} posts from ${POSTS_REPO_PATH}`);
+}
+
+function findIndexFiles(rootDir, errors) {
+  const results = [];
+
+  walk(rootDir, (entryPath, entry) => {
+    if (!entry.isFile() || entry.name !== "index.md") {
+      return;
+    }
+
+    const relativePath = toPosix(path.relative(rootDir, entryPath));
+    const segments = relativePath.split("/");
+
+    if (segments.length !== 3) {
+      errors.push(`Invalid post path "${relativePath}". Expected {category}/{slug}/index.md.`);
+      return;
+    }
+
+    const [category] = segments;
+    if (!ALLOWED_CATEGORIES.includes(category)) {
+      errors.push(`Invalid category path "${relativePath}". Allowed categories: ${ALLOWED_CATEGORIES.join(", ")}.`);
+      return;
+    }
+
+    results.push(entryPath);
+  });
+
+  return results;
+}
+
+function buildPost(indexFilePath, slugSet) {
+  const relativePath = toPosix(path.relative(POSTS_REPO_PATH, indexFilePath));
+  const [categoryDir, slugDir] = relativePath.split("/");
+  const postDir = path.dirname(indexFilePath);
+  const rawSource = fs.readFileSync(indexFilePath, "utf8");
+  const { frontmatter, body } = parseMarkdownFile(rawSource, relativePath);
+
+  validateRequiredFields(frontmatter, relativePath);
+  validateStringEnum("status", frontmatter.status, ALLOWED_STATUSES, relativePath);
+  validateStringEnum("category", frontmatter.category, ALLOWED_CATEGORIES, relativePath);
+  validateDateField("date", frontmatter.date, relativePath);
+
+  if (frontmatter.updated !== undefined) {
+    validateDateField("updated", frontmatter.updated, relativePath);
+  }
+
+  if (frontmatter.slug !== slugDir) {
+    throw new Error(`Slug mismatch in "${relativePath}". Folder name "${slugDir}" must match frontmatter slug "${frontmatter.slug}".`);
+  }
+
+  if (frontmatter.category !== categoryDir) {
+    throw new Error(`Category mismatch in "${relativePath}". Directory "${categoryDir}" must match frontmatter category "${frontmatter.category}".`);
+  }
+
+  if (ALLOWED_CATEGORIES.includes(frontmatter.slug)) {
+    throw new Error(`Slug "${frontmatter.slug}" is reserved because it conflicts with category routing.`);
+  }
+
+  const existingSlugPath = slugSet.get(frontmatter.slug);
+  if (existingSlugPath) {
+    throw new Error(`Duplicate slug "${frontmatter.slug}" found in "${relativePath}" and "${existingSlugPath}".`);
+  }
+  slugSet.set(frontmatter.slug, relativePath);
+
+  const normalized = {
+    title: frontmatter.title,
+    slug: frontmatter.slug,
+    date: frontmatter.date,
+    description: frontmatter.description,
+    category: frontmatter.category,
+    status: frontmatter.status,
+    tags: normalizeTags(frontmatter.tags, relativePath),
+    updated: normalizeOptionalString(frontmatter.updated, "updated", relativePath),
+    thumbnail: normalizeAssetField(frontmatter.thumbnail, postDir, frontmatter.category, frontmatter.slug, "thumbnail", relativePath),
+    series: normalizeOptionalString(frontmatter.series, "series", relativePath),
+    featured: normalizeOptionalBoolean(frontmatter.featured, "featured", relativePath),
+    draftNote: normalizeOptionalString(frontmatter.draftNote, "draftNote", relativePath),
+    body: rewriteMarkdownAssetPaths(body, postDir, frontmatter.category, frontmatter.slug, relativePath),
+    path: relativePath,
+  };
+
+  copyAssetsDirectory(postDir, frontmatter.category, frontmatter.slug);
+  return normalized;
+}
+
+function parseMarkdownFile(source, relativePath) {
+  const normalizedSource = source.replace(/\r\n/g, "\n");
+  if (!normalizedSource.startsWith("---\n")) {
+    throw new Error(`Missing frontmatter in "${relativePath}".`);
+  }
+
+  const closingMarkerIndex = normalizedSource.indexOf("\n---\n", 4);
+  if (closingMarkerIndex === -1) {
+    throw new Error(`Unclosed frontmatter block in "${relativePath}".`);
+  }
+
+  const frontmatterSource = normalizedSource.slice(4, closingMarkerIndex);
+  const body = normalizedSource.slice(closingMarkerIndex + 5).trim();
+
+  return {
+    frontmatter: parseFrontmatter(frontmatterSource, relativePath),
+    body,
+  };
+}
+
+function parseFrontmatter(source, relativePath) {
+  const result = {};
+  const lines = source.split("\n");
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line.trim()) {
+      continue;
+    }
+
+    const match = /^([A-Za-z][A-Za-z0-9_]*)\s*:\s*(.*)$/.exec(line);
+    if (!match) {
+      throw new Error(`Invalid frontmatter line "${line}" in "${relativePath}".`);
+    }
+
+    const [, key, rawValue] = match;
+
+    if (!rawValue.trim()) {
+      const items = [];
+      while (index + 1 < lines.length) {
+        const nextLine = lines[index + 1];
+        const listMatch = /^\s*-\s*(.*)$/.exec(nextLine);
+        if (!listMatch) {
+          break;
+        }
+
+        items.push(parseScalar(listMatch[1]));
+        index += 1;
+      }
+      result[key] = items;
+      continue;
+    }
+
+    result[key] = parseScalar(rawValue);
+  }
+
+  return result;
+}
+
+function parseScalar(value) {
+  const trimmed = value.trim();
+  if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1);
+  }
+
+  if (trimmed === "true") {
+    return true;
+  }
+
+  if (trimmed === "false") {
+    return false;
+  }
+
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    const inner = trimmed.slice(1, -1).trim();
+    if (!inner) {
+      return [];
+    }
+
+    return inner.split(",").map((item) => parseScalar(item));
+  }
+
+  return trimmed;
+}
+
+function validateRequiredFields(frontmatter, relativePath) {
+  const requiredFields = ["title", "slug", "date", "description", "category", "status"];
+  for (const field of requiredFields) {
+    if (typeof frontmatter[field] !== "string" || !frontmatter[field].trim()) {
+      throw new Error(`Missing required frontmatter field "${field}" in "${relativePath}".`);
+    }
+  }
+}
+
+function validateStringEnum(field, value, allowedValues, relativePath) {
+  if (typeof value !== "string" || !allowedValues.includes(value)) {
+    throw new Error(`Invalid ${field} "${String(value)}" in "${relativePath}". Allowed values: ${allowedValues.join(", ")}.`);
+  }
+}
+
+function validateDateField(field, value, relativePath) {
+  if (typeof value !== "string" || !DATE_PATTERN.test(value)) {
+    throw new Error(`Invalid ${field} "${String(value)}" in "${relativePath}". Expected YYYY-MM-DD.`);
+  }
+}
+
+function normalizeTags(value, relativePath) {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new Error(`Invalid tags in "${relativePath}". Tags must be an array of strings.`);
+  }
+
+  return value.map((tag) => {
+    if (typeof tag !== "string" || !tag.trim()) {
+      throw new Error(`Invalid tag value "${String(tag)}" in "${relativePath}".`);
+    }
+    return tag.trim();
+  });
+}
+
+function normalizeOptionalString(value, field, relativePath) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Invalid ${field} in "${relativePath}". Expected a non-empty string.`);
+  }
+
+  return value.trim();
+}
+
+function normalizeOptionalBoolean(value, field, relativePath) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "boolean") {
+    throw new Error(`Invalid ${field} in "${relativePath}". Expected true or false.`);
+  }
+
+  return value;
+}
+
+function normalizeAssetField(value, postDir, category, slug, field, relativePath) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Invalid ${field} in "${relativePath}". Expected a string path.`);
+  }
+
+  return resolveAssetReference(value.trim(), postDir, category, slug, relativePath, field);
+}
+
+function rewriteMarkdownAssetPaths(body, postDir, category, slug, relativePath) {
+  return body.replace(/(!?\[[^\]]*\]\()([^)]+)(\))/g, (match, prefix, rawTarget, suffix) => {
+    const cleanedTarget = rawTarget.trim().replace(/^<|>$/g, "");
+
+    if (!isLocalAssetReference(cleanedTarget)) {
+      return match;
+    }
+
+    const resolvedTarget = resolveAssetReference(cleanedTarget, postDir, category, slug, relativePath, "body asset");
+    return `${prefix}${resolvedTarget}${suffix}`;
+  });
+}
+
+function resolveAssetReference(rawTarget, postDir, category, slug, relativePath, field) {
+  if (!isLocalAssetReference(rawTarget)) {
+    return rawTarget;
+  }
+
+  const absoluteTargetPath = path.resolve(postDir, rawTarget);
+  if (!absoluteTargetPath.startsWith(postDir)) {
+    throw new Error(`Invalid ${field} path "${rawTarget}" in "${relativePath}". Asset references must stay within the post directory.`);
+  }
+
+  if (!fs.existsSync(absoluteTargetPath)) {
+    throw new Error(`Missing ${field} "${rawTarget}" in "${relativePath}". Resolved path: ${absoluteTargetPath}`);
+  }
+
+  const stat = fs.statSync(absoluteTargetPath);
+  if (!stat.isFile()) {
+    throw new Error(`Invalid ${field} "${rawTarget}" in "${relativePath}". Expected a file.`);
+  }
+
+  const relativeAssetPath = toPosix(path.relative(postDir, absoluteTargetPath));
+  return `${PUBLIC_ASSET_BASE}/${category}/${slug}/${relativeAssetPath}`;
+}
+
+function copyAssetsDirectory(postDir, category, slug) {
+  const destinationDir = path.join(PUBLIC_ASSET_ROOT, category, slug);
+  ensureDirectory(destinationDir);
+
+  for (const entry of fs.readdirSync(postDir, { withFileTypes: true })) {
+    if (entry.name === "index.md") {
+      continue;
+    }
+
+    const sourcePath = path.join(postDir, entry.name);
+    const destinationPath = path.join(destinationDir, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectoryRecursive(sourcePath, destinationPath);
+      continue;
+    }
+
+    fs.copyFileSync(sourcePath, destinationPath);
+  }
+}
+
+function copyDirectoryRecursive(sourceDir, destinationDir) {
+  ensureDirectory(destinationDir);
+
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    const sourcePath = path.join(sourceDir, entry.name);
+    const destinationPath = path.join(destinationDir, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectoryRecursive(sourcePath, destinationPath);
+      continue;
+    }
+
+    fs.copyFileSync(sourcePath, destinationPath);
+  }
+}
+
+function isLocalAssetReference(target) {
+  return !/^(?:[a-z]+:|#|\/)/i.test(target);
+}
+
+function walk(currentDir, visitor) {
+  for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+    const entryPath = path.join(currentDir, entry.name);
+
+    if (entry.isDirectory()) {
+      walk(entryPath, visitor);
+      continue;
+    }
+
+    visitor(entryPath, entry);
+  }
+}
+
+function ensureDirectoryExists(directoryPath, message) {
+  if (!fs.existsSync(directoryPath) || !fs.statSync(directoryPath).isDirectory()) {
+    throw new Error(message);
+  }
+}
+
+function ensureDirectory(directoryPath) {
+  fs.mkdirSync(directoryPath, { recursive: true });
+}
+
+function resetDirectory(directoryPath) {
+  fs.rmSync(directoryPath, { recursive: true, force: true });
+  ensureDirectory(directoryPath);
+}
+
+function toPosix(filePath) {
+  return filePath.split(path.sep).join("/");
+}
+
+main();

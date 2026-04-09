@@ -46,3 +46,7 @@ public/static
 
 # posts json
 .posts
+
+# generated content
+.generated
+public/generated/posts

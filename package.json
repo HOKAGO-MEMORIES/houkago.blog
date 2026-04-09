@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "posts:sync": "node ./scripts/generate-posts.mjs",
+    "predev": "npm run posts:sync",
     "dev": "next dev --turbopack",
+    "prebuild": "npm run posts:sync",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

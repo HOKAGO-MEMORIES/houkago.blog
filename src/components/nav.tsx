@@ -16,10 +16,6 @@ export const navs = [
         href: "/blog",
         label: "Blog",
     },
-	{
-		href: "/ps",
-		label: "PS",
-	},
     {
         href: "/projects",
         label: "Projects",

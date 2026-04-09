@@ -1,39 +1,65 @@
-import PageLayout from "@/components/page-layout";
 import Image from "next/image";
 import Link from "next/link";
-import { blogPosts } from "#posts"
+import PageLayout from "@/components/page-layout";
+import { BLOG_CATEGORIES, getCategoryRoute, getPostRoute, getRenderablePosts } from "@/lib/posts";
 
-export default function Blog() {
-    return (
-        <PageLayout title="Blog" description="블로그 글을 작성해봅시다!">
-            <div className="flex flex-col">
-                {blogPosts
-                    .sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)))
-                    .map((blog) => (
-                        <Link
-                            href={`${"blog/" + blog.permalink}`}
-                            key={blog.slug}
-                            className="flex py-5 items-center justify-between gap-2 border-b last:border-none"
-                        >
-                            <div className="flex flex-col gap-1 flex-1">
-                                <span className="font-semibold text-lg break-all line-clamp-2 text-primary">
-                                    {blog.title}
-                                </span>
-                                <span className="break-all">{blog.desc}</span>
-                                <time className="text-xs mt-1">{blog.date}</time>
-                            </div>
-                            <Image
-                                width={150}
-                                height={150}
-                                src={blog.thumbnail}
-                                alt={blog.title}
-                                className="object-cover w-28 h-28"
-                            />
-                        </Link>
-                    ))
-                }
+export default function BlogPage() {
+  const posts = getRenderablePosts();
+
+  return (
+    <PageLayout
+      title="Blog"
+      description="houkago.posts를 읽고 검증한 정적 포스트 허브입니다."
+    >
+      <section className="grid gap-4 sm:grid-cols-2">
+        {BLOG_CATEGORIES.map((category) => {
+          const count = posts.filter((post) => post.category === category).length;
+          return (
+            <Link
+              key={category}
+              href={getCategoryRoute(category)}
+              className="rounded-2xl border p-5 transition-colors hover:border-primary"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{category}</p>
+              <h2 className="mt-2 text-2xl font-bold text-primary">{count} posts</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                published posts only in production, with optional explicit draft preview in local development.
+              </p>
+            </Link>
+          );
+        })}
+      </section>
+
+      <section className="mt-6 flex flex-col">
+        {posts.map((post) => (
+          <Link
+            href={getPostRoute(post)}
+            key={post.slug}
+            className="flex items-center justify-between gap-4 border-b py-5 last:border-none"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border px-2 py-0.5 text-xs font-semibold uppercase text-primary">
+                  {post.category}
+                </span>
+                {post.featured && <span className="text-xs font-semibold text-primary">FEATURED</span>}
+              </div>
+              <span className="text-lg font-semibold text-primary">{post.title}</span>
+              <span className="break-all text-sm text-muted-foreground">{post.description}</span>
+              <time className="text-xs">{post.date}</time>
             </div>
-        </PageLayout> 
-    );
-  }
-  
+            {post.thumbnail && (
+              <Image
+                width={144}
+                height={144}
+                src={post.thumbnail}
+                alt={post.title}
+                className="hidden h-24 w-24 rounded-xl object-cover sm:block"
+              />
+            )}
+          </Link>
+        ))}
+      </section>
+    </PageLayout>
+  );
+}

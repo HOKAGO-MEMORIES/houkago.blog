@@ -1,42 +1,82 @@
 # houkago.blog
 
-![Next.js](https://img.shields.io/badge/Next.js-15.1.7-000000?logo=nextdotjs)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178C6?logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.0.8-06B6D4?logo=tailwindcss)
-![Shadcn/ui](https://img.shields.io/badge/Shadcn/ui-Design-000000?logo=shadcnui)
-![Vercel](https://img.shields.io/badge/Vercel-Hosting-000000?logo=vercel)
+`houkago.blog` is the public frontend repository for the Houkago portfolio and blog site.
 
+This repository is not the content source of truth. The canonical post source lives in the private repository `houkago.posts`. `houkago.blog` reads, validates, normalizes, and renders that content into static-first pages.
 
-방과후 블로그에 오신 것을 환영합니다.  
-현재 포스트는 이 저장소 내부의 `.posts`에서 직접 작성/관리합니다.  
+## Repository Role
 
-## 로컬 포스트 작성 방법
+`houkago.blog` owns:
+- the public UI
+- route structure
+- build-time content validation
+- normalization for rendering
+- static page generation and deployment
 
-- 블로그 글: `.posts/blogPosts.json`
-- PS 글: `.posts/psPosts.json`
-- 공통 필드: `title`, `date`, `desc`, `category`, `slug`, `body`, `permalink`
+`houkago.blog` does not own:
+- original markdown post files
+- canonical content metadata
+- post authoring workflow
 
-예시:
-```json
-{
-  "title": "새 글 제목",
-  "date": "2026-02-28",
-  "desc": "요약",
-  "category": "BLOG",
-  "slug": "my-new-post",
-  "thumbnail": "/images/sample.png",
-  "body": "# 본문\\n\\n여기에 내용을 작성합니다.",
-  "permalink": "/my-new-post"
-}
+## Build Strategy
+
+The site uses a two-repository checkout flow:
+
+1. `houkago.posts` changes trigger GitHub Actions.
+2. Actions checks out both `houkago.blog` and `houkago.posts`.
+3. `houkago.blog` runs `npm run posts:sync`.
+4. The sync step reads `POSTS_REPO_PATH`, validates the content contract, rewrites local asset paths, copies static assets into `public/generated/posts`, and writes `.generated/posts-manifest.json`.
+5. `next build` consumes that manifest to statically generate `/`, `/blog`, `/blog/{category}`, and `/blog/{slug}`.
+
+Vercel does not read the private content repository directly. Private repository access stays inside GitHub Actions.
+
+## Environment Variables
+
+Required integration variable:
+- `POSTS_REPO_PATH`
+
+Resolution behavior:
+- use `POSTS_REPO_PATH` when provided
+- otherwise fall back to `../houkago.posts`
+
+Optional local preview variable:
+- `POSTS_INCLUDE_DRAFTS=true`
+
+Draft preview is never enabled implicitly in production.
+
+## Content Contract Summary
+
+Expected post layout:
+
+```text
+{category}/{slug}/index.md
+{category}/{slug}/assets/*
 ```
 
-<details>
-<summary>CHANGE LOG</summary>
+Allowed categories:
+- `algorithm`
+- `project`
+- `cs`
+- `blog`
 
-- 댓글 기능 추가 예정 (giscus)
-- 구글 애널리틱스 연결 예정
-- mdx에 css 스타일 적용 예정
-- 백엔드 의존 제거, 프론트엔드 저장소에서 포스트 직접 관리
-- 카테고리를 blog와 ps로 분리
+Required frontmatter:
+- `title`
+- `slug`
+- `date`
+- `description`
+- `category`
+- `status`
 
-</details>
+Optional frontmatter:
+- `tags`
+- `updated`
+- `thumbnail`
+- `series`
+- `featured`
+- `draftNote`
+
+## Documentation
+
+- [docs/content-source.md](./docs/content-source.md)
+- [docs/routing.md](./docs/routing.md)
+- [docs/rendering-rules.md](./docs/rendering-rules.md)
