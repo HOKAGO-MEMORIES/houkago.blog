@@ -22,13 +22,13 @@ This repository is not the content source of truth. The canonical post source li
 
 The site uses a two-repository checkout flow:
 
-1. `houkago.posts` changes trigger GitHub Actions.
-2. Actions checks out both `houkago.blog` and `houkago.posts`.
+1. GitHub Actions checks out both `houkago.blog` and `houkago.posts`.
+2. The workflow builds from the `houkago.blog` workspace with `POSTS_REPO_PATH=../houkago.posts`.
 3. `houkago.blog` runs `npm run posts:sync`.
 4. The sync step reads `POSTS_REPO_PATH`, validates the content contract, rewrites local asset paths, copies static assets into `public/generated/posts`, and writes `.generated/posts-manifest.json`.
 5. `next build` consumes that manifest to statically generate `/`, `/blog`, `/blog/{category}`, and `/blog/{slug}`.
 
-Vercel does not read the private content repository directly. Private repository access stays inside GitHub Actions.
+Vercel does not read the private content repository directly. Private repository access stays inside GitHub Actions, which builds first and deploys prebuilt output to Vercel.
 
 ## Environment Variables
 
@@ -38,11 +38,24 @@ Required integration variable:
 Resolution behavior:
 - use `POSTS_REPO_PATH` when provided
 - otherwise fall back to `../houkago.posts`
+- resolve the final absolute path relative to the `houkago.blog` project root instead of relying on a fixed Vercel path
 
 Optional local preview variable:
 - `POSTS_INCLUDE_DRAFTS=true`
 
 Draft preview is never enabled implicitly in production.
+
+## Local Development
+
+Recommended local layout:
+
+```text
+../
+├── houkago.blog
+└── houkago.posts
+```
+
+In that layout, `npm run dev` works with the default fallback. If your local checkout differs, set `POSTS_REPO_PATH` explicitly before running `npm run posts:sync`, `npm run dev`, or `npm run build`.
 
 ## Content Contract Summary
 

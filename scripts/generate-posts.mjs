@@ -1,30 +1,32 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ALLOWED_CATEGORIES = ["algorithm", "project", "cs", "blog"];
 const ALLOWED_STATUSES = ["draft", "published", "archived"];
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const POSTS_REPO_PATH = process.env.POSTS_REPO_PATH
-  ? path.resolve(process.cwd(), process.env.POSTS_REPO_PATH)
-  : path.resolve(process.cwd(), "..", "houkago.posts");
-const GENERATED_DIR = path.resolve(process.cwd(), ".generated");
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(SCRIPT_DIR, "..");
+const DEFAULT_POSTS_REPO_PATH = "../houkago.posts";
+const GENERATED_DIR = path.resolve(PROJECT_ROOT, ".generated");
 const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
-const PUBLIC_ASSET_ROOT = path.resolve(process.cwd(), "public", "generated", "posts");
+const PUBLIC_ASSET_ROOT = path.resolve(PROJECT_ROOT, "public", "generated", "posts");
 const PUBLIC_ASSET_BASE = "/generated/posts";
 
 function main() {
-  ensureDirectoryExists(POSTS_REPO_PATH, `Posts repository not found: ${POSTS_REPO_PATH}`);
+  const postsRepo = resolvePostsRepository();
+  ensureDirectoryExists(postsRepo.absolutePath, buildMissingPostsRepoMessage(postsRepo));
   resetDirectory(GENERATED_DIR);
   resetDirectory(PUBLIC_ASSET_ROOT);
 
   const errors = [];
   const slugSet = new Map();
-  const discoveredIndexFiles = findIndexFiles(POSTS_REPO_PATH, errors);
+  const discoveredIndexFiles = findIndexFiles(postsRepo.absolutePath, errors);
   const posts = [];
 
   for (const indexFilePath of discoveredIndexFiles) {
     try {
-      const post = buildPost(indexFilePath, slugSet);
+      const post = buildPost(indexFilePath, slugSet, postsRepo.absolutePath);
       posts.push(post);
     } catch (error) {
       errors.push(error instanceof Error ? error.message : String(error));
@@ -32,7 +34,9 @@ function main() {
   }
 
   if (discoveredIndexFiles.length === 0) {
-    errors.push(`No post files were found in ${POSTS_REPO_PATH}. Expected {category}/{slug}/index.md.`);
+    errors.push(
+      `No post files were found in ${postsRepo.absolutePath}. Expected canonical paths like {category}/{slug}/index.md.`,
+    );
   }
 
   if (errors.length > 0) {
@@ -46,13 +50,38 @@ function main() {
   const manifest = {
     version: 1,
     generatedAt: new Date().toISOString(),
-    sourcePath: POSTS_REPO_PATH,
+    sourcePath: postsRepo.absolutePath,
+    sourcePathInput: postsRepo.inputPath,
+    sourcePathStrategy: postsRepo.strategy,
     publicAssetBase: PUBLIC_ASSET_BASE,
     posts: posts.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug)),
   };
 
   fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-  console.log(`Generated ${manifest.posts.length} posts from ${POSTS_REPO_PATH}`);
+  console.log(`Generated ${manifest.posts.length} posts from ${postsRepo.absolutePath} (${postsRepo.strategy})`);
+}
+
+function resolvePostsRepository() {
+  const configuredPath = process.env.POSTS_REPO_PATH?.trim();
+  const inputPath = configuredPath || DEFAULT_POSTS_REPO_PATH;
+
+  return {
+    inputPath,
+    absolutePath: path.resolve(PROJECT_ROOT, inputPath),
+    strategy: configuredPath ? "env" : "default",
+  };
+}
+
+function buildMissingPostsRepoMessage(postsRepo) {
+  return [
+    "Posts repository not found.",
+    `- resolved path: ${postsRepo.absolutePath}`,
+    `- resolution: ${postsRepo.strategy === "env" ? "POSTS_REPO_PATH" : `default fallback (${DEFAULT_POSTS_REPO_PATH})`}`,
+    `- input value: ${postsRepo.inputPath}`,
+    `- project root: ${PROJECT_ROOT}`,
+    `- current working directory: ${process.cwd()}`,
+    'Set POSTS_REPO_PATH to the checked out houkago.posts directory, or place houkago.posts next to houkago.blog for local development.',
+  ].join("\n");
 }
 
 function findIndexFiles(rootDir, errors) {
@@ -83,8 +112,8 @@ function findIndexFiles(rootDir, errors) {
   return results;
 }
 
-function buildPost(indexFilePath, slugSet) {
-  const relativePath = toPosix(path.relative(POSTS_REPO_PATH, indexFilePath));
+function buildPost(indexFilePath, slugSet, postsRepoPath) {
+  const relativePath = toPosix(path.relative(postsRepoPath, indexFilePath));
   const [categoryDir, slugDir] = relativePath.split("/");
   const postDir = path.dirname(indexFilePath);
   const rawSource = fs.readFileSync(indexFilePath, "utf8");

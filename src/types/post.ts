@@ -22,6 +22,8 @@ export type PostManifest = {
   version: number;
   generatedAt: string;
   sourcePath: string;
+  sourcePathInput: string;
+  sourcePathStrategy: "env" | "default";
   publicAssetBase: string;
   posts: Post[];
 };

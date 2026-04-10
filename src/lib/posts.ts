@@ -16,7 +16,7 @@ function isDraftPreviewEnabled() {
 export const getPostManifest = cache((): PostManifest => {
   if (!fs.existsSync(MANIFEST_PATH)) {
     throw new Error(
-      `Generated post manifest was not found at ${MANIFEST_PATH}. Run "npm run posts:sync" or use the project build scripts.`,
+      `Generated post manifest was not found at ${MANIFEST_PATH}. Run "npm run posts:sync" with POSTS_REPO_PATH set to houkago.posts, or use the GitHub Actions/Vercel prebuild pipeline.`,
     );
   }
 
