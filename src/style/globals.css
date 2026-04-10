@@ -77,3 +77,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .prose code::before,
+  .prose code::after,
+  .prose pre code::before,
+  .prose pre code::after {
+    content: none !important;
+  }
+
+  .prose :not(pre) > code {
+    font-weight: 400 !important;
+  }
+}
