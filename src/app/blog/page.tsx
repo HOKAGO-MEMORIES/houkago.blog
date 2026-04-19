@@ -1,7 +1,37 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import PageLayout from "@/components/page-layout";
 import { BLOG_CATEGORIES, getCategoryRoute, getPostRoute, getRenderablePosts } from "@/lib/posts";
+import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: `Blog | ${SITE_NAME}`,
+  description: "houkago.posts를 읽고 검증한 정적 포스트 허브입니다.",
+  alternates: {
+    canonical: "/blog",
+  },
+  openGraph: {
+    title: `Blog | ${SITE_NAME}`,
+    description: "houkago.posts를 읽고 검증한 정적 포스트 허브입니다.",
+    url: "/blog",
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        alt: SITE_NAME,
+      },
+    ],
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Blog | ${SITE_NAME}`,
+    description: "houkago.posts를 읽고 검증한 정적 포스트 허브입니다.",
+    images: [DEFAULT_OG_IMAGE],
+  },
+};
 
 export default function BlogPage() {
   const posts = getRenderablePosts();

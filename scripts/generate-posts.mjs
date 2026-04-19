@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const ALLOWED_CATEGORIES = ["algorithm", "project", "cs", "blog"];
 const ALLOWED_STATUSES = ["draft", "published", "archived"];
+const BLOG_MDX_COMPONENTS = new Set(["Callout", "Aside", "ImageFigure", "YouTube"]);
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(SCRIPT_DIR, "..");
@@ -128,6 +129,8 @@ function buildPost(indexFilePath, slugSet, postsRepoPath) {
     validateDateField("updated", frontmatter.updated, relativePath);
   }
 
+  validateBodyByCategory(body, frontmatter.category, relativePath);
+
   if (frontmatter.slug !== slugDir) {
     throw new Error(`Slug mismatch in "${relativePath}". Folder name "${slugDir}" must match frontmatter slug "${frontmatter.slug}".`);
   }
@@ -250,6 +253,81 @@ function parseScalar(value) {
   }
 
   return trimmed;
+}
+
+function validateBodyByCategory(body, category, relativePath) {
+  const analyzableBody = stripCodeLiterals(body);
+
+  validateForbiddenMdxJavaScript(analyzableBody, relativePath);
+
+  if (category === "blog") {
+    validateAllowedBlogMdx(analyzableBody, relativePath);
+    return;
+  }
+
+  validateMarkdownSubset(analyzableBody, category, relativePath);
+}
+
+function stripCodeLiterals(source) {
+  return source
+    .replace(/```[\s\S]*?```/g, "\n")
+    .replace(/~~~[\s\S]*?~~~/g, "\n")
+    .replace(/`[^`\n]*`/g, "");
+}
+
+function validateForbiddenMdxJavaScript(source, relativePath) {
+  if (/^\s*(?:import|export)\s/m.test(source)) {
+    throw new Error(`Unsupported MDX module syntax in "${relativePath}". import/export are not allowed in post bodies.`);
+  }
+
+  if (/<[A-Za-z][^>\n]*\{[^}\n]+\}[^>\n]*>/.test(source) || /(^|\n)\s*\{[^{}\n]+\}\s*($|\n)/.test(source)) {
+    throw new Error(`Unsupported MDX JavaScript expression in "${relativePath}". Curly-brace expressions are disabled.`);
+  }
+}
+
+function validateMarkdownSubset(source, category, relativePath) {
+  if (/(?<!\\)<\/?[A-Za-z][^>\n]*>|<!--/.test(source)) {
+    throw new Error(
+      `Invalid body syntax in "${relativePath}". ${category} posts must stay within the Markdown subset and cannot contain HTML or MDX tags.`,
+    );
+  }
+}
+
+function validateAllowedBlogMdx(source, relativePath) {
+  for (const match of source.matchAll(/<\/?([A-Z][A-Za-z0-9]*)\b/g)) {
+    const componentName = match[1];
+    if (!BLOG_MDX_COMPONENTS.has(componentName)) {
+      throw new Error(
+        `Unsupported MDX component "${componentName}" in "${relativePath}". Blog posts may only use: ${Array.from(BLOG_MDX_COMPONENTS).join(", ")}.`,
+      );
+    }
+  }
+
+  for (const match of source.matchAll(/<ImageFigure\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/g)) {
+    const src = match[1];
+    if (!isAllowedBlogMediaSource(src)) {
+      throw new Error(
+        `Invalid ImageFigure src "${src}" in "${relativePath}". Use a public path beginning with "/" or an absolute URL.`,
+      );
+    }
+  }
+
+  for (const match of source.matchAll(/<YouTube\b([^>]*)>/g)) {
+    const attributes = match[1];
+    const idMatch = /\bid\s*=\s*["']([^"']+)["']/.exec(attributes);
+
+    if (!idMatch) {
+      throw new Error(`Invalid YouTube usage in "${relativePath}". The YouTube component requires an id prop.`);
+    }
+
+    if (!/^[A-Za-z0-9_-]{11}$/.test(idMatch[1])) {
+      throw new Error(`Invalid YouTube id "${idMatch[1]}" in "${relativePath}". Expected an 11-character video id.`);
+    }
+  }
+}
+
+function isAllowedBlogMediaSource(source) {
+  return source.startsWith("/") || /^(?:https?:)?\/\//i.test(source);
 }
 
 function validateRequiredFields(frontmatter, relativePath) {

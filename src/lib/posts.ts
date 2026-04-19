@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
 import type { Category, Post, PostManifest } from "@/types/post";
+import { getCategoryDescription } from "@/lib/site";
 
 const MANIFEST_PATH = path.join(process.cwd(), ".generated", "posts-manifest.json");
 
@@ -92,4 +93,8 @@ export function getPostRoute(post: Post) {
 
 export function getCategoryRoute(category: Category) {
   return `/blog/${category}`;
+}
+
+export function getCategorySummary(category: Category) {
+  return getCategoryDescription(category);
 }

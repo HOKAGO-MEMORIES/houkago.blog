@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { blogMDXComponents } from "@/components/mdx/blog-components";
 import { MDXContent } from "@/components/mdx-content";
 import { getSerializedMDX } from "@/lib/mdx";
 import {
+  getCategorySummary,
   getCategoryRoute,
   getPostBySlug,
   getPostRoute,
@@ -10,9 +13,106 @@ import {
   getVisiblePostsByCategory,
   isCategorySegment,
 } from "@/lib/posts";
+import {
+  AUTHOR_NAME,
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  getCategoryTitle,
+  getPostTitle,
+  toSeoDate,
+} from "@/lib/site";
 
 export function generateStaticParams() {
   return getStaticBlogSegments();
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+
+  if (isCategorySegment(slug)) {
+    const posts = getVisiblePostsByCategory(slug);
+    if (posts.length === 0) {
+      return {};
+    }
+
+    const title = getCategoryTitle(slug);
+    const description = `${getCategorySummary(slug)} 현재 공개된 글은 ${posts.length}개입니다.`;
+    const canonical = getCategoryRoute(slug);
+
+    return {
+      title,
+      description,
+      alternates: {
+        canonical,
+      },
+      openGraph: {
+        title,
+        description,
+        url: canonical,
+        siteName: SITE_NAME,
+        images: [
+          {
+            url: DEFAULT_OG_IMAGE,
+            alt: title,
+          },
+        ],
+        locale: "ko_KR",
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [DEFAULT_OG_IMAGE],
+      },
+    };
+  }
+
+  const post = getPostBySlug(slug);
+  if (!post) {
+    return {};
+  }
+
+  const title = getPostTitle(post.title);
+  const canonical = getPostRoute(post);
+  const image = post.thumbnail ?? DEFAULT_OG_IMAGE;
+  const modifiedDate = post.updated ?? post.date;
+
+  return {
+    title,
+    description: post.description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description: post.description,
+      url: canonical,
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: image,
+          alt: post.title,
+        },
+      ],
+      locale: "ko_KR",
+      type: "article",
+      publishedTime: toSeoDate(post.date),
+      modifiedTime: toSeoDate(modifiedDate),
+      authors: [AUTHOR_NAME],
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: post.description,
+      images: [image],
+    },
+  };
 }
 
 export default async function BlogSegmentPage({
@@ -34,7 +134,11 @@ export default async function BlogSegmentPage({
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Category</p>
           <h1 className="text-5xl font-black text-primary">{slug.toUpperCase()}</h1>
-          <p className="text-sm text-muted-foreground">{posts.length} posts available in this category.</p>
+          <p className="text-sm text-muted-foreground">
+            {getCategorySummary(slug)}
+            {" "}
+            현재 공개된 글은 {posts.length}개입니다.
+          </p>
         </div>
         <div className="flex flex-col">
           {posts.map((post) => (
@@ -61,6 +165,7 @@ export default async function BlogSegmentPage({
   }
 
   const mdxSource = await getSerializedMDX(post.body);
+  const mdxComponents = post.category === "blog" ? blogMDXComponents : undefined;
 
   return (
     <article className="mt-5 flex flex-col gap-4">
@@ -83,7 +188,7 @@ export default async function BlogSegmentPage({
           ))}
         </div>
       )}
-      <MDXContent mdxSource={mdxSource} />
+      <MDXContent mdxSource={mdxSource} components={mdxComponents} />
     </article>
   );
 }
