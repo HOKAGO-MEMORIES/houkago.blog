@@ -13,10 +13,6 @@ interface Nav {
 
 export const navs = [
     {
-        href: "/",
-        label: "About",
-    },
-    {
         href: "/blog",
         label: "Blog",
     },
