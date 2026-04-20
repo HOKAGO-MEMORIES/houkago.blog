@@ -13,6 +13,10 @@ interface Nav {
 
 export const navs = [
     {
+        href: "/",
+        label: "About",
+    },
+    {
         href: "/blog",
         label: "Blog",
     },
@@ -42,13 +46,14 @@ export function NavItem({
 	onClick,
 }: Nav & { onClick?: () => void }) {
 	const pathname = usePathname();
+    const isActive = href === "/" ? pathname === "/" : pathname?.startsWith(href);
 
 	return (
 		<Link
 			href={href}
 			className={cn(
 				"transition-colors hover:font-black py-3 text-primary font-bold flex items-center",
-				pathname?.startsWith(href) && "underline underline-offset-4 font-black",
+				isActive && "underline underline-offset-4 font-black",
 			)}
 			target={external ? "_blank" : undefined}
 			onClick={onClick}

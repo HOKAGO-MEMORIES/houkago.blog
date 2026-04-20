@@ -1,12 +1,30 @@
 import Link from "next/link";
+import { cn } from "@/components/ui/utils";
 import { getPostRoute, getRecentPosts } from "@/lib/posts";
 
-export default function RecentPosts() {
-  const recentPosts = getRecentPosts(5);
+interface RecentPostsProps {
+  limit?: number;
+  title?: string;
+  description?: string;
+  className?: string;
+}
+
+export default function RecentPosts({
+  limit = 5,
+  title = "Recent Posts",
+  description,
+  className,
+}: RecentPostsProps) {
+  const recentPosts = getRecentPosts(limit);
 
   return (
-    <>
-      <h2 className="mt-20 text-5xl font-extrabold text-primary">Recent Posts</h2>
+    <section className={cn("flex flex-col gap-5", className)}>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-5xl font-extrabold text-primary">{title}</h2>
+        {description ? (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
       <div className="flex flex-col">
         {recentPosts.map((post) => (
           <Link
@@ -25,6 +43,6 @@ export default function RecentPosts() {
           </Link>
         ))}
       </div>
-    </>
+    </section>
   );
 }
