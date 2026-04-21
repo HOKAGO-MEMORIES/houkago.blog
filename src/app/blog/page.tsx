@@ -51,7 +51,7 @@ export default function BlogPage() {
             <Link
               key={category}
               href={getCategoryRoute(category)}
-              className="rounded-2xl border p-5 transition-colors hover:border-primary"
+              className="rounded-2xl border p-5 transition-colors hover:border-primary hover:bg-card/70"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{category}</p>
               <h2 className="mt-2 text-2xl font-bold text-primary">{count} posts</h2>
@@ -73,12 +73,12 @@ export default function BlogPage() {
       <CategoryHighlightsSection />
 
       <section id="all-posts" className="flex flex-col gap-4">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
               Archive
             </p>
-            <h2 className="text-4xl font-extrabold text-primary">All Posts</h2>
+            <h2 className="text-4xl font-bold tracking-tight text-primary">All Posts</h2>
           </div>
           <span className="text-sm text-muted-foreground">
             전체 공개 글 {posts.length}개
@@ -88,7 +88,7 @@ export default function BlogPage() {
           <Link
             href={getPostRoute(post)}
             key={post.slug}
-            className="flex items-center justify-between gap-4 border-b py-5 last:border-none"
+            className="flex flex-col gap-4 border-b py-5 transition-colors hover:border-primary sm:flex-row sm:items-center sm:justify-between last:border-none"
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export default function BlogPage() {
                 {post.featured && <span className="text-xs font-semibold text-primary">FEATURED</span>}
               </div>
               <span className="text-lg font-semibold text-primary">{post.title}</span>
-              <span className="break-all text-sm text-muted-foreground">{post.description}</span>
+              <span className="break-words text-sm leading-6 text-muted-foreground">{post.description}</span>
               <time className="text-xs">{post.date}</time>
             </div>
             {post.thumbnail && (

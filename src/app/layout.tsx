@@ -13,22 +13,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={pretendard.className} suppressHydrationWarning>
-      <body className="max-w-screen-md min-w-[320px] mx-auto">
-        <GoogleAnalytics />
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider
-					attribute="class"
-					defaultTheme="light"
-					enableSystem
-					disableTransitionOnChange
-				>
-          <main className="flex flex-col">
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GoogleAnalytics />
+          <div className="mx-auto flex min-h-screen w-full max-w-screen-md min-w-[320px] flex-col">
             <Header />
-            {children}
-          </main>
-        
+            <main className="flex flex-1 flex-col">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </ThemeProvider>
-        <Footer />
-
       </body>
     </html>
   );
