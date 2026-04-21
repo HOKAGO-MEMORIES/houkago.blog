@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const ALLOWED_CATEGORIES = ["algorithm", "project", "cs", "blog"];
 const ALLOWED_STATUSES = ["draft", "published", "archived"];
 const BLOG_MDX_COMPONENTS = new Set(["Callout", "Aside", "ImageFigure", "YouTube"]);
+const RESERVED_BLOG_SEGMENTS = new Set(["algorithm", "project", "cs", "blog", "page", "tag"]);
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(SCRIPT_DIR, "..");
@@ -139,8 +140,8 @@ function buildPost(indexFilePath, slugSet, postsRepoPath) {
     throw new Error(`Category mismatch in "${relativePath}". Directory "${categoryDir}" must match frontmatter category "${frontmatter.category}".`);
   }
 
-  if (ALLOWED_CATEGORIES.includes(frontmatter.slug)) {
-    throw new Error(`Slug "${frontmatter.slug}" is reserved because it conflicts with category routing.`);
+  if (RESERVED_BLOG_SEGMENTS.has(frontmatter.slug)) {
+    throw new Error(`Slug "${frontmatter.slug}" is reserved because it conflicts with blog routing.`);
   }
 
   const existingSlugPath = slugSet.get(frontmatter.slug);

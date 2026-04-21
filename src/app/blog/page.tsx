@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import PageLayout from "@/components/page-layout";
 import RecentPosts from "@/app/components/recent-posts";
 import CategoryHighlightsSection from "@/app/blog/components/category-highlights-section";
 import FeaturedPostsSection from "@/app/blog/components/featured-posts-section";
-import { BLOG_CATEGORIES, getCategoryRoute, getPostRoute, getRenderablePosts } from "@/lib/posts";
+import PaginationNav from "@/app/blog/components/pagination-nav";
+import PostListSection from "@/app/blog/components/post-list-section";
+import {
+  BLOG_CATEGORIES,
+  POSTS_PER_PAGE,
+  getArchivePagination,
+  getArchiveRoute,
+  getCategoryRoute,
+  getRenderablePosts,
+} from "@/lib/posts";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -38,11 +46,13 @@ export const metadata: Metadata = {
 
 export default function BlogPage() {
   const posts = getRenderablePosts();
+  const archive = getArchivePagination(1);
 
   return (
     <PageLayout
       title="Blog"
       description="방과후 블로그의 입구 페이지입니다. 추천 글, 최근 글, 카테고리 하이라이트를 먼저 둘러본 뒤 전체 글로 이어질 수 있습니다."
+      className="gap-14"
     >
       <section className="grid gap-4 sm:grid-cols-2">
         {BLOG_CATEGORIES.map((category) => {
@@ -72,47 +82,19 @@ export default function BlogPage() {
 
       <CategoryHighlightsSection />
 
-      <section id="all-posts" className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              Archive
-            </p>
-            <h2 className="text-4xl font-bold tracking-tight text-primary">All Posts</h2>
-          </div>
-          <span className="text-sm text-muted-foreground">
-            전체 공개 글 {posts.length}개
-          </span>
-        </div>
-        {posts.map((post) => (
-          <Link
-            href={getPostRoute(post)}
-            key={post.slug}
-            className="flex flex-col gap-4 border-b py-5 transition-colors hover:border-primary sm:flex-row sm:items-center sm:justify-between last:border-none"
-          >
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full border px-2 py-0.5 text-xs font-semibold uppercase text-primary">
-                  {post.category}
-                </span>
-                {post.featured && <span className="text-xs font-semibold text-primary">FEATURED</span>}
-              </div>
-              <span className="text-lg font-semibold text-primary">{post.title}</span>
-              <span className="break-words text-sm leading-6 text-muted-foreground">{post.description}</span>
-              <time className="text-xs">{post.date}</time>
-            </div>
-            {post.thumbnail && (
-              <Image
-                width={144}
-                height={144}
-                src={post.thumbnail}
-                alt={post.title}
-                className="hidden h-24 w-24 rounded-xl object-cover sm:block"
-              />
-            )}
-          </Link>
-        ))}
-      </section>
+      <PostListSection
+        id="all-posts"
+        kicker="Archive"
+        title="All Posts"
+        description={`전체 공개 글 ${archive.totalItems}개를 ${POSTS_PER_PAGE}개 단위로 나눠서 보여줍니다.`}
+        posts={archive.posts}
+      />
+
+      <PaginationNav
+        currentPage={archive.currentPage}
+        totalPages={archive.totalPages}
+        getPageHref={getArchiveRoute}
+      />
     </PageLayout>
   );
 }
