@@ -20,7 +20,7 @@ export default function RecentPosts({
   return (
     <section className={cn("flex flex-col gap-5", className)}>
       <div className="flex flex-col gap-2">
-        <h2 className="text-5xl font-extrabold text-primary">{title}</h2>
+        <h2 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">{title}</h2>
         {description ? (
           <p className="text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -30,13 +30,13 @@ export default function RecentPosts({
           <Link
             href={getPostRoute(post)}
             key={post.slug}
-            className="flex gap-4 border-b py-5 last:border-none"
+            className="flex flex-col gap-3 border-b py-5 transition-colors hover:border-primary sm:flex-row sm:items-start sm:gap-4 last:border-none"
           >
-            <div className="flex flex-col gap-1">
-              <span className="font-bold text-lg break-keep text-primary">{post.title}</span>
-              <span className="break-all">{post.description}</span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="break-keep text-lg font-semibold text-primary">{post.title}</span>
+              <span className="break-words text-sm leading-6 text-muted-foreground">{post.description}</span>
             </div>
-            <div className="ml-auto flex shrink-0 flex-col items-end gap-1 text-right">
+            <div className="flex shrink-0 flex-col gap-1 text-left sm:ml-auto sm:items-end sm:text-right">
               <span className="text-primary uppercase">{post.category}</span>
               <time className="text-xs">{post.date}</time>
             </div>

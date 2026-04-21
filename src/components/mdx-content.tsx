@@ -17,7 +17,7 @@ interface MDXProps {
 
 export const MDXContent = ({ mdxSource, components }: MDXProps) => {
   return (
-    <div className="prose prose-slate dark:prose-invert flex-1">
+    <div className="prose flex-1 max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground prose-pre:text-foreground prose-a:text-primary">
       <MarkdownRenderer mdxSource={mdxSource} components={components} />
     </div>
   );

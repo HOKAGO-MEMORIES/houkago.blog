@@ -14,16 +14,18 @@ export default function PageLayout({
     className,
 }: PageLayoutProps) {
     return (
-        <div className={cn(["px-5 pt-7 pb-16 flex flex-col gap-5", className])}>
+        <div className={cn(["flex flex-col gap-5 px-5 pt-7 pb-16", className])}>
             {(title || description) && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                     {title && (
-                        <h1 className="text-6xl font-extrabold text-primary break-all tracking-tighter">
+                        <h1 className="break-words text-5xl font-bold tracking-tight text-primary sm:text-6xl">
                             {title.toUpperCase()}
                         </h1>
                     )}
                     {description && (
-                        <span className="text-primary font-medium">{description}</span>
+                        <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+                            {description}
+                        </p>
                     )}
                 </div>
             )}

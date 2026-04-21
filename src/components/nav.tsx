@@ -48,13 +48,13 @@ export function NavItem({
 		<Link
 			href={href}
 			className={cn(
-				"transition-colors hover:font-black py-3 text-primary font-bold flex items-center",
-				isActive && "underline underline-offset-4 font-black",
+				"flex items-center py-3 text-primary font-semibold uppercase tracking-[0.14em] transition-colors hover:text-foreground",
+				isActive && "underline underline-offset-4 text-foreground",
 			)}
 			target={external ? "_blank" : undefined}
 			onClick={onClick}
 		>
-			{label.toUpperCase()}
+			{label}
 			{external && <ArrowUpRight className="h-4 w-4" />}
 		</Link>
 	);
