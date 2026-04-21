@@ -16,7 +16,7 @@ interface HeaderProps {
 export default function Header({ searchPosts }: HeaderProps) {
     return (
         <header className="sticky top-0 z-50 border-b bg-background/95 px-3 sm:px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-            <div className="hidden h-14 grid-cols-4 items-center sm:grid">
+            <div className="hidden h-14 grid-cols-5 items-center sm:grid">
                 <div className="flex justify-center">
                     <Logo />
                 </div>
@@ -26,10 +26,10 @@ export default function Header({ searchPosts }: HeaderProps) {
                     </div>
                 ))}
                 <div className="flex justify-center">
-                    <div className="flex items-center gap-3">
-                        <SearchDialog posts={searchPosts} />
-                        <ThemeChanger />
-                    </div>
+                    <SearchDialog posts={searchPosts} />
+                </div>
+                <div className="flex justify-center">
+                    <ThemeChanger />
                 </div>
             </div>
             <div className="flex h-14 items-center justify-between sm:hidden">
