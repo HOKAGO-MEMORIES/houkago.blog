@@ -51,10 +51,12 @@ Post bodies follow category-specific authoring rules:
 
 - `algorithm`, `cs`, and `project` must stay within the Markdown subset
 - those categories may use standard Markdown, GFM, and fenced code blocks
+- those categories may also use inline math `$...$` and block math `$$...$$`
 - those categories may not use raw HTML, JSX, custom MDX components, `import`, `export`, or `{}` expressions
 
 - `blog` may use the same Markdown baseline plus limited MDX presentation components
 - allowed blog-only components are `Callout`, `Aside`, `ImageFigure`, and `YouTube`
+- `blog` may also use inline math `$...$` and block math `$$...$$`
 - `blog` still may not use `import`, `export`, or `{}` expressions
 - `ImageFigure` must use a public path such as `/generated/posts/...` or an absolute URL
 

@@ -257,7 +257,7 @@ function parseScalar(value) {
 }
 
 function validateBodyByCategory(body, category, relativePath) {
-  const analyzableBody = stripCodeLiterals(body);
+  const analyzableBody = stripMathLiterals(stripCodeLiterals(body));
 
   validateForbiddenMdxJavaScript(analyzableBody, relativePath);
 
@@ -274,6 +274,12 @@ function stripCodeLiterals(source) {
     .replace(/```[\s\S]*?```/g, "\n")
     .replace(/~~~[\s\S]*?~~~/g, "\n")
     .replace(/`[^`\n]*`/g, "");
+}
+
+function stripMathLiterals(source) {
+  return source
+    .replace(/\$\$[\s\S]*?\$\$/g, "\n")
+    .replace(/(?<!\\)\$(?:\\.|[^$\\\n])+(?<!\\)\$/g, "");
 }
 
 function validateForbiddenMdxJavaScript(source, relativePath) {
