@@ -33,11 +33,18 @@ This design intentionally avoids fixed paths like `/vercel/houkago.posts`.
 
 ## Canonical Structure
 
-Every post must match this layout:
+Non-algorithm posts use the flat layout:
 
 ```text
 {category}/{slug}/index.md
 {category}/{slug}/assets/*
+```
+
+Algorithm problem-solving posts may use the platform layout:
+
+```text
+algorithm/{platform}/{problem-id}/index.md
+algorithm/{platform}/{problem-id}/assets/*
 ```
 
 Allowed categories:
@@ -45,6 +52,8 @@ Allowed categories:
 - `project`
 - `cs`
 - `blog`
+
+For algorithm platform paths, the public slug is derived as `{platform}-{problem-id}`. For example, `algorithm/boj/1002/index.md` becomes the flat public post slug `boj-1002`.
 
 ## Validation Rules
 
@@ -54,13 +63,16 @@ Validated constraints:
 - `title`, `slug`, `date`, `description`, `category`, `status` must exist
 - `status` must be `draft`, `published`, or `archived`
 - `category` must be `algorithm`, `project`, `cs`, or `blog`
-- folder name must match `slug`
+- flat post folder names must match `slug`
+- algorithm platform paths derive the expected `slug` from `{platform}-{problem-id}`
+- `platform` and `problemId` are optional frontmatter fields, but are normalized for algorithm platform paths
+- when present, `platform` and `problemId` must match the algorithm path segments
 - top-level category directory must match `category`
 - `slug` must be unique across the repository
 - `slug` must not collide with reserved category routes
 - `date` and `updated` must use `YYYY-MM-DD`
 - local `thumbnail` and markdown asset references must resolve to real files
-- `index.md` path must match `{category}/{slug}/index.md`
+- `index.md` path must match `{category}/{slug}/index.md` or `algorithm/{platform}/{problem-id}/index.md`
 
 If the posts repository cannot be found, the sync step fails with a diagnostic error that includes:
 - the resolved absolute path
@@ -85,9 +97,11 @@ type Post = {
   series?: string;
   featured?: boolean;
   draftNote?: string;
+  platform?: string;
+  problemId?: string;
   body: string;
   path: string;
 };
 ```
 
-`body` contains markdown with rewritten static asset paths, and `path` stores the canonical source file path inside `houkago.posts`.
+`body` contains markdown with rewritten static asset paths, and `path` stores the source file path inside `houkago.posts`, such as `cs/001-osiv/index.md` or `algorithm/boj/1002/index.md`.

@@ -59,12 +59,21 @@ In that layout, `npm run dev` works with the default fallback. If your local che
 
 ## Content Contract Summary
 
-Expected post layout:
+Expected non-algorithm post layout:
 
 ```text
 {category}/{slug}/index.md
 {category}/{slug}/assets/*
 ```
+
+Expected algorithm problem-solving layout:
+
+```text
+algorithm/{platform}/{problem-id}/index.md
+algorithm/{platform}/{problem-id}/assets/*
+```
+
+Algorithm platform paths still publish as flat post slugs: `{platform}-{problem-id}`. For example, `algorithm/boj/1002/index.md` renders at `/blog/boj-1002`.
 
 Allowed categories:
 - `algorithm`
@@ -87,6 +96,8 @@ Optional frontmatter:
 - `series`
 - `featured`
 - `draftNote`
+- `platform`
+- `problemId`
 
 ## Documentation
 

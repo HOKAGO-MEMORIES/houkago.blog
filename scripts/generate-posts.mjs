@@ -14,6 +14,8 @@ const GENERATED_DIR = path.resolve(PROJECT_ROOT, ".generated");
 const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
 const PUBLIC_ASSET_ROOT = path.resolve(PROJECT_ROOT, "public", "generated", "posts");
 const PUBLIC_ASSET_BASE = "/generated/posts";
+const EXPECTED_POST_PATH_MESSAGE =
+  "Expected {category}/{slug}/index.md or algorithm/{platform}/{problem-id}/index.md.";
 
 function main() {
   const postsRepo = resolvePostsRepository();
@@ -95,15 +97,14 @@ function findIndexFiles(rootDir, errors) {
     }
 
     const relativePath = toPosix(path.relative(rootDir, entryPath));
-    const segments = relativePath.split("/");
+    const parsedPath = parsePostPath(relativePath);
 
-    if (segments.length !== 3) {
-      errors.push(`Invalid post path "${relativePath}". Expected {category}/{slug}/index.md.`);
+    if (!parsedPath) {
+      errors.push(`Invalid post path "${relativePath}". ${EXPECTED_POST_PATH_MESSAGE}`);
       return;
     }
 
-    const [category] = segments;
-    if (!ALLOWED_CATEGORIES.includes(category)) {
+    if (!ALLOWED_CATEGORIES.includes(parsedPath.categoryDir)) {
       errors.push(`Invalid category path "${relativePath}". Allowed categories: ${ALLOWED_CATEGORIES.join(", ")}.`);
       return;
     }
@@ -114,9 +115,43 @@ function findIndexFiles(rootDir, errors) {
   return results;
 }
 
+function parsePostPath(relativePath) {
+  const segments = relativePath.split("/");
+
+  if (segments.length === 3) {
+    const [categoryDir, slugDir, fileName] = segments;
+    return {
+      layout: "flat",
+      categoryDir,
+      slugDir,
+      fileName,
+      platformDir: undefined,
+      problemIdDir: undefined,
+    };
+  }
+
+  if (segments.length === 4 && segments[0] === "algorithm") {
+    const [categoryDir, platformDir, problemIdDir, fileName] = segments;
+    return {
+      layout: "algorithm-platform",
+      categoryDir,
+      slugDir: `${platformDir}-${problemIdDir}`,
+      fileName,
+      platformDir,
+      problemIdDir,
+    };
+  }
+
+  return null;
+}
+
 function buildPost(indexFilePath, slugSet, postsRepoPath) {
   const relativePath = toPosix(path.relative(postsRepoPath, indexFilePath));
-  const [categoryDir, slugDir] = relativePath.split("/");
+  const postPath = parsePostPath(relativePath);
+  if (!postPath) {
+    throw new Error(`Invalid post path "${relativePath}". ${EXPECTED_POST_PATH_MESSAGE}`);
+  }
+
   const postDir = path.dirname(indexFilePath);
   const rawSource = fs.readFileSync(indexFilePath, "utf8");
   const { frontmatter, body } = parseMarkdownFile(rawSource, relativePath);
@@ -132,12 +167,27 @@ function buildPost(indexFilePath, slugSet, postsRepoPath) {
 
   validateBodyByCategory(body, frontmatter.category, relativePath);
 
-  if (frontmatter.slug !== slugDir) {
-    throw new Error(`Slug mismatch in "${relativePath}". Folder name "${slugDir}" must match frontmatter slug "${frontmatter.slug}".`);
+  if (postPath.layout === "algorithm-platform") {
+    if (frontmatter.category !== "algorithm") {
+      throw new Error(`Category mismatch in "${relativePath}". Algorithm platform paths must use frontmatter category "algorithm", but found "${frontmatter.category}".`);
+    }
+
+    if (frontmatter.slug !== postPath.slugDir) {
+      throw new Error(
+        `Slug mismatch in "${relativePath}". Expected slug "${postPath.slugDir}" from algorithm path, but frontmatter slug is "${frontmatter.slug}".`,
+      );
+    }
+
+    validateOptionalPathSegment("platform", frontmatter.platform, postPath.platformDir, relativePath);
+    validateOptionalPathSegment("problemId", frontmatter.problemId, postPath.problemIdDir, relativePath);
+  } else {
+    if (frontmatter.slug !== postPath.slugDir) {
+      throw new Error(`Slug mismatch in "${relativePath}". Folder name "${postPath.slugDir}" must match frontmatter slug "${frontmatter.slug}".`);
+    }
   }
 
-  if (frontmatter.category !== categoryDir) {
-    throw new Error(`Category mismatch in "${relativePath}". Directory "${categoryDir}" must match frontmatter category "${frontmatter.category}".`);
+  if (frontmatter.category !== postPath.categoryDir) {
+    throw new Error(`Category mismatch in "${relativePath}". Directory "${postPath.categoryDir}" must match frontmatter category "${frontmatter.category}".`);
   }
 
   if (RESERVED_BLOG_SEGMENTS.has(frontmatter.slug)) {
@@ -149,6 +199,15 @@ function buildPost(indexFilePath, slugSet, postsRepoPath) {
     throw new Error(`Duplicate slug "${frontmatter.slug}" found in "${relativePath}" and "${existingSlugPath}".`);
   }
   slugSet.set(frontmatter.slug, relativePath);
+
+  const normalizedPlatform =
+    postPath.layout === "algorithm-platform"
+      ? postPath.platformDir
+      : normalizeOptionalString(frontmatter.platform, "platform", relativePath);
+  const normalizedProblemId =
+    postPath.layout === "algorithm-platform"
+      ? postPath.problemIdDir
+      : normalizeOptionalString(frontmatter.problemId, "problemId", relativePath);
 
   const normalized = {
     title: frontmatter.title,
@@ -163,12 +222,35 @@ function buildPost(indexFilePath, slugSet, postsRepoPath) {
     series: normalizeOptionalString(frontmatter.series, "series", relativePath),
     featured: normalizeOptionalBoolean(frontmatter.featured, "featured", relativePath),
     draftNote: normalizeOptionalString(frontmatter.draftNote, "draftNote", relativePath),
+    platform: normalizedPlatform,
+    problemId: normalizedProblemId,
     body: rewriteMarkdownAssetPaths(body, postDir, frontmatter.category, frontmatter.slug, relativePath),
     path: relativePath,
   };
 
   copyAssetsDirectory(postDir, frontmatter.category, frontmatter.slug);
   return normalized;
+}
+
+function validateOptionalPathSegment(field, frontmatterValue, directoryValue, relativePath) {
+  if (frontmatterValue === undefined) {
+    return;
+  }
+
+  const normalizedValue = normalizeOptionalString(frontmatterValue, field, relativePath);
+  if (normalizedValue === directoryValue) {
+    return;
+  }
+
+  if (field === "platform") {
+    throw new Error(
+      `Platform mismatch in "${relativePath}". Directory platform "${directoryValue}" must match frontmatter platform "${normalizedValue}".`,
+    );
+  }
+
+  throw new Error(
+    `Problem id mismatch in "${relativePath}". Directory problem id "${directoryValue}" must match frontmatter problemId "${normalizedValue}".`,
+  );
 }
 
 function parseMarkdownFile(source, relativePath) {

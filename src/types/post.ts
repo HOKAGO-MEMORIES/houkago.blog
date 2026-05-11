@@ -14,6 +14,8 @@ export type Post = {
   series?: string;
   featured?: boolean;
   draftNote?: string;
+  platform?: string;
+  problemId?: string;
   body: string;
   path: string;
 };
