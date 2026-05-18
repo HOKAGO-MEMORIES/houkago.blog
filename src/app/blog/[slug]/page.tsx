@@ -12,6 +12,7 @@ import {
   getCategoryPagination,
   getCategorySummary,
   getCategoryRoute,
+  getPostBodyBySlug,
   getPostBySlug,
   getPostRoute,
   getStaticBlogSegments,
@@ -153,11 +154,12 @@ export default async function BlogSegmentPage({
   }
 
   const post = getPostBySlug(slug);
-  if (!post) {
+  const body = getPostBodyBySlug(slug);
+  if (!post || body === undefined) {
     notFound();
   }
 
-  const mdxSource = await getSerializedMDX(post.body);
+  const mdxSource = await getSerializedMDX(body);
   const mdxComponents = post.category === "blog" ? blogMDXComponents : undefined;
 
   return (

@@ -13,6 +13,7 @@ const DEFAULT_POSTS_REPO_PATH = "../houkago.posts";
 const GENERATED_DIR = path.resolve(PROJECT_ROOT, ".generated");
 const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
 const SEARCH_INDEX_PATH = path.join(GENERATED_DIR, "search-index.json");
+const POST_BODY_DIR = path.join(GENERATED_DIR, "post-bodies");
 const PUBLIC_ASSET_ROOT = path.resolve(PROJECT_ROOT, "public", "generated", "posts");
 const PUBLIC_ASSET_BASE = "/generated/posts";
 const EXPECTED_POST_PATH_MESSAGE =
@@ -62,7 +63,7 @@ function main() {
     sourcePathInput: postsRepo.inputPath,
     sourcePathStrategy: postsRepo.strategy,
     publicAssetBase: PUBLIC_ASSET_BASE,
-    posts: sortedPosts,
+    posts: sortedPosts.map(toManifestPost),
   };
 
   const searchIndex = {
@@ -80,7 +81,39 @@ function main() {
 
   fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   fs.writeFileSync(SEARCH_INDEX_PATH, `${JSON.stringify(searchIndex, null, 2)}\n`, "utf8");
+  writePostBodies(sortedPosts, generatedAt);
   console.log(`Generated ${manifest.posts.length} posts from ${postsRepo.absolutePath} (${postsRepo.strategy})`);
+}
+
+function toManifestPost(post) {
+  const { body, ...metadata } = post;
+  return {
+    ...metadata,
+    bodyPath: getPostBodyRelativePath(post.slug),
+  };
+}
+
+function writePostBodies(posts, generatedAt) {
+  ensureDirectory(POST_BODY_DIR);
+
+  for (const post of posts) {
+    const bodyFile = {
+      version: 1,
+      generatedAt,
+      slug: post.slug,
+      body: post.body,
+    };
+
+    fs.writeFileSync(
+      path.join(GENERATED_DIR, getPostBodyRelativePath(post.slug)),
+      `${JSON.stringify(bodyFile, null, 2)}\n`,
+      "utf8",
+    );
+  }
+}
+
+function getPostBodyRelativePath(slug) {
+  return toPosix(path.join("post-bodies", `${encodeURIComponent(slug)}.json`));
 }
 
 function isDraftPreviewEnabled() {

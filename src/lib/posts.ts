@@ -3,12 +3,13 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
-import type { Category, Post, PostManifest } from "@/types/post";
+import type { Category, Post, PostBody, PostManifest } from "@/types/post";
 import type { SearchIndex } from "@/types/search";
 import { getCategoryDescription } from "@/lib/site";
 
-const MANIFEST_PATH = path.join(process.cwd(), ".generated", "posts-manifest.json");
-const SEARCH_INDEX_PATH = path.join(process.cwd(), ".generated", "search-index.json");
+const GENERATED_DIR = path.join(process.cwd(), ".generated");
+const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
+const SEARCH_INDEX_PATH = path.join(GENERATED_DIR, "search-index.json");
 
 export const BLOG_CATEGORIES: Category[] = ["algorithm", "project", "cs", "blog"];
 export const POSTS_PER_PAGE = 25;
@@ -75,6 +76,32 @@ export function getVisiblePostsByCategory(category: Category) {
 export function getPostBySlug(slug: string) {
   return getRenderablePosts().find((post) => post.slug === slug);
 }
+
+export const getPostBodyBySlug = cache((slug: string) => {
+  const post = getPostBySlug(slug);
+  if (!post) {
+    return undefined;
+  }
+
+  const bodyPath = path.resolve(GENERATED_DIR, post.bodyPath);
+  const relativeBodyPath = path.relative(GENERATED_DIR, bodyPath);
+  if (relativeBodyPath.startsWith("..") || path.isAbsolute(relativeBodyPath)) {
+    throw new Error(`Generated post body path escapes the generated directory: ${post.bodyPath}`);
+  }
+
+  if (!fs.existsSync(bodyPath)) {
+    throw new Error(`Generated post body was not found at ${bodyPath}. Run "npm run posts:sync".`);
+  }
+
+  const raw = fs.readFileSync(bodyPath, "utf8");
+  const postBody = JSON.parse(raw) as PostBody;
+
+  if (postBody.slug !== slug) {
+    throw new Error(`Generated post body slug mismatch. Expected "${slug}", found "${postBody.slug}".`);
+  }
+
+  return postBody.body;
+});
 
 export function getFeaturedPosts(limit = 3) {
   return getRenderablePosts()
