@@ -102,5 +102,6 @@ Optional frontmatter:
 ## Documentation
 
 - [docs/content-source.md](./docs/content-source.md)
+- [docs/post-loading-performance-log.md](./docs/post-loading-performance-log.md)
 - [docs/routing.md](./docs/routing.md)
 - [docs/rendering-rules.md](./docs/rendering-rules.md)
