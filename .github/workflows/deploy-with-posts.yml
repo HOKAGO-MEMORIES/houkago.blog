@@ -95,7 +95,19 @@ jobs:
       - name: Deploy prebuilt output to Vercel
         if: steps.mode.outputs.value == 'direct'
         working-directory: houkago.blog
-        run: vercel deploy --prebuilt ${{ steps.vercel-env.outputs.deploy-args }} --token=${{ secrets.VERCEL_TOKEN }}
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if vercel deploy --prebuilt ${{ steps.vercel-env.outputs.deploy-args }} --token=${{ secrets.VERCEL_TOKEN }}; then
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+
+            sleep $((attempt * 30))
+          done
 
       - name: Trigger Vercel Deploy Hook
         if: steps.mode.outputs.value == 'hook-only'
