@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:
     inputs:
       mode:
@@ -32,6 +33,20 @@ jobs:
             echo "value=${{ github.event.inputs.mode }}" >> "$GITHUB_OUTPUT"
           else
             echo "value=direct" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Select Vercel environment
+        id: vercel-env
+        shell: bash
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "build-args=--prod" >> "$GITHUB_OUTPUT"
+            echo "deploy-args=--prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "build-args=" >> "$GITHUB_OUTPUT"
+            echo "deploy-args=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout houkago.blog
@@ -68,19 +83,19 @@ jobs:
       - name: Pull Vercel environment information
         if: steps.mode.outputs.value == 'direct'
         working-directory: houkago.blog
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=${{ steps.vercel-env.outputs.environment }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build blog with posts content
         if: steps.mode.outputs.value == 'direct'
         working-directory: houkago.blog
         env:
           POSTS_REPO_PATH: ../houkago.posts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build ${{ steps.vercel-env.outputs.build-args }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy prebuilt output to Vercel
         if: steps.mode.outputs.value == 'direct'
         working-directory: houkago.blog
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt ${{ steps.vercel-env.outputs.deploy-args }} --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Trigger Vercel Deploy Hook
         if: steps.mode.outputs.value == 'hook-only'
