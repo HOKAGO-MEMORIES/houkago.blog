@@ -3,17 +3,12 @@
 import { Home, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import type { SearchPost } from "@/types/search";
 import { NavItem, navs } from "./nav";
 import NavMobile from "./nav-mobile";
 import SearchDialog from "./search-dialog";
 import { Button } from "./ui/button";
 
-interface HeaderProps {
-    searchPosts: SearchPost[];
-}
-
-export default function Header({ searchPosts }: HeaderProps) {
+export default function Header() {
     return (
         <header className="sticky top-0 z-50 border-b bg-background/95 px-3 sm:px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <div className="hidden h-14 grid-cols-5 items-center sm:grid">
@@ -26,7 +21,7 @@ export default function Header({ searchPosts }: HeaderProps) {
                     </div>
                 ))}
                 <div className="flex justify-center">
-                    <SearchDialog posts={searchPosts} />
+                    <SearchDialog />
                 </div>
                 <div className="flex justify-center">
                     <ThemeChanger />
@@ -35,7 +30,7 @@ export default function Header({ searchPosts }: HeaderProps) {
             <div className="flex h-14 items-center justify-between sm:hidden">
                 <Logo />
                 <div className="flex items-center gap-1">
-                    <SearchDialog posts={searchPosts} />
+                    <SearchDialog />
                     <ThemeChanger />
                     <NavMobile />
                 </div>

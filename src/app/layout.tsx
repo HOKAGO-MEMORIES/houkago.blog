@@ -6,15 +6,12 @@ import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { pretendard } from "@/style/fonts/fonts";
 import GoogleAnalytics from "@/lib/google-analytics"; 
-import { getSearchPosts } from "@/lib/posts";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const searchPosts = getSearchPosts();
-
   return (
     <html lang="ko" className={pretendard.className} suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased">
@@ -26,7 +23,7 @@ export default function RootLayout({
         >
           <GoogleAnalytics />
           <div className="mx-auto flex min-h-screen w-full max-w-screen-md min-w-[320px] flex-col">
-            <Header searchPosts={searchPosts} />
+            <Header />
             <main className="flex flex-1 flex-col">
               {children}
             </main>
