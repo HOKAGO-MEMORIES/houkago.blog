@@ -18,7 +18,9 @@ The site uses a build-time sync step:
 6. validate content and route safety
 7. rewrite local asset references to public static paths
 8. copy post assets into `public/generated/posts`
-9. write a normalized manifest to `.generated/posts-manifest.json`
+9. write normalized post metadata to `.generated/posts-manifest.json`
+10. write search data to `.generated/search-index.json`
+11. write post bodies to `.generated/post-bodies/*.json`
 
 The sync entrypoint is `scripts/generate-posts.mjs`.
 
@@ -99,9 +101,9 @@ type Post = {
   draftNote?: string;
   platform?: string;
   problemId?: string;
-  body: string;
+  bodyPath: string;
   path: string;
 };
 ```
 
-`body` contains markdown with rewritten static asset paths, and `path` stores the source file path inside `houkago.posts`, such as `cs/001-osiv/index.md` or `algorithm/boj/1002/index.md`.
+`bodyPath` points to a generated body file containing markdown with rewritten static asset paths. `path` stores the source file path inside `houkago.posts`, such as `cs/001-osiv/index.md` or `algorithm/boj/1002/index.md`.

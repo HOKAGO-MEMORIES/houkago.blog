@@ -16,8 +16,15 @@ export type Post = {
   draftNote?: string;
   platform?: string;
   problemId?: string;
-  body: string;
+  bodyPath: string;
   path: string;
+};
+
+export type PostBody = {
+  version: number;
+  generatedAt: string;
+  slug: string;
+  body: string;
 };
 
 export type PostManifest = {

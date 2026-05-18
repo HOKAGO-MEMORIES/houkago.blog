@@ -3,21 +3,85 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SearchPost } from "@/types/search";
 import { Button } from "@/components/ui/button";
 
-interface SearchDialogProps {
+type SearchIndexResponse = {
   posts: SearchPost[];
+};
+
+let cachedSearchPosts: SearchPost[] | null = null;
+let searchPostsRequest: Promise<SearchPost[]> | null = null;
+
+async function loadSearchPosts() {
+  if (cachedSearchPosts) {
+    return cachedSearchPosts;
+  }
+
+  searchPostsRequest ??= fetch("/api/search-index")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to load search index.");
+      }
+
+      return response.json() as Promise<SearchIndexResponse>;
+    })
+    .then((data) => {
+      cachedSearchPosts = data.posts;
+      return data.posts;
+    })
+    .finally(() => {
+      searchPostsRequest = null;
+    });
+
+  return searchPostsRequest;
 }
 
-export default function SearchDialog({ posts }: SearchDialogProps) {
+export default function SearchDialog() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [posts, setPosts] = useState<SearchPost[]>(cachedSearchPosts ?? []);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const normalizedQuery = query.trim().toLowerCase();
 
+  useEffect(() => {
+    if (!open || cachedSearchPosts) {
+      if (cachedSearchPosts) {
+        setPosts(cachedSearchPosts);
+      }
+      return;
+    }
+
+    let active = true;
+    setLoading(true);
+    setFailed(false);
+
+    loadSearchPosts()
+      .then((nextPosts) => {
+        if (active) {
+          setPosts(nextPosts);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
   const results = useMemo(() => {
-    if (!normalizedQuery) {
+    if (!normalizedQuery || loading || failed) {
       return [];
     }
 
@@ -25,7 +89,7 @@ export default function SearchDialog({ posts }: SearchDialogProps) {
       const haystack = `${post.title} ${post.searchText}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [normalizedQuery, posts]);
+  }, [failed, loading, normalizedQuery, posts]);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -75,7 +139,15 @@ export default function SearchDialog({ posts }: SearchDialogProps) {
             />
           </label>
 
-          {normalizedQuery ? (
+          {loading ? (
+            <div className="rounded-2xl border border-dashed px-5 py-8 text-sm text-muted-foreground">
+              검색 인덱스를 불러오는 중입니다.
+            </div>
+          ) : failed ? (
+            <div className="rounded-2xl border px-5 py-8 text-sm text-muted-foreground">
+              검색 데이터를 불러오지 못했습니다.
+            </div>
+          ) : normalizedQuery ? (
             <div className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto pr-1">
               <p className="text-sm text-muted-foreground">
                 검색 결과 {results.length}개

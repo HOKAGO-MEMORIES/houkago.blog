@@ -3,10 +3,13 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
-import type { Category, Post, PostManifest } from "@/types/post";
+import type { Category, Post, PostBody, PostManifest } from "@/types/post";
+import type { SearchIndex } from "@/types/search";
 import { getCategoryDescription } from "@/lib/site";
 
-const MANIFEST_PATH = path.join(process.cwd(), ".generated", "posts-manifest.json");
+const GENERATED_DIR = path.join(process.cwd(), ".generated");
+const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
+const SEARCH_INDEX_PATH = path.join(GENERATED_DIR, "search-index.json");
 
 export const BLOG_CATEGORIES: Category[] = ["algorithm", "project", "cs", "blog"];
 export const POSTS_PER_PAGE = 25;
@@ -37,7 +40,22 @@ export function getAllPosts() {
   return getPostManifest().posts;
 }
 
-export function getRenderablePosts() {
+export const getSearchIndex = cache((): SearchIndex => {
+  if (!fs.existsSync(SEARCH_INDEX_PATH)) {
+    throw new Error(
+      `Generated search index was not found at ${SEARCH_INDEX_PATH}. Run "npm run posts:sync" with POSTS_REPO_PATH set to houkago.posts, or use the GitHub Actions/Vercel prebuild pipeline.`,
+    );
+  }
+
+  const raw = fs.readFileSync(SEARCH_INDEX_PATH, "utf8");
+  return JSON.parse(raw) as SearchIndex;
+});
+
+export function getSearchPosts() {
+  return getSearchIndex().posts;
+}
+
+export const getRenderablePosts = cache(() => {
   return getAllPosts().filter((post) => {
     if (post.status === "published") {
       return true;
@@ -49,7 +67,7 @@ export function getRenderablePosts() {
 
     return false;
   });
-}
+});
 
 export function getVisiblePostsByCategory(category: Category) {
   return getRenderablePosts().filter((post) => post.category === category);
@@ -58,6 +76,32 @@ export function getVisiblePostsByCategory(category: Category) {
 export function getPostBySlug(slug: string) {
   return getRenderablePosts().find((post) => post.slug === slug);
 }
+
+export const getPostBodyBySlug = cache((slug: string) => {
+  const post = getPostBySlug(slug);
+  if (!post) {
+    return undefined;
+  }
+
+  const bodyPath = path.resolve(GENERATED_DIR, post.bodyPath);
+  const relativeBodyPath = path.relative(GENERATED_DIR, bodyPath);
+  if (relativeBodyPath.startsWith("..") || path.isAbsolute(relativeBodyPath)) {
+    throw new Error(`Generated post body path escapes the generated directory: ${post.bodyPath}`);
+  }
+
+  if (!fs.existsSync(bodyPath)) {
+    throw new Error(`Generated post body was not found at ${bodyPath}. Run "npm run posts:sync".`);
+  }
+
+  const raw = fs.readFileSync(bodyPath, "utf8");
+  const postBody = JSON.parse(raw) as PostBody;
+
+  if (postBody.slug !== slug) {
+    throw new Error(`Generated post body slug mismatch. Expected "${slug}", found "${postBody.slug}".`);
+  }
+
+  return postBody.body;
+});
 
 export function getFeaturedPosts(limit = 3) {
   return getRenderablePosts()
