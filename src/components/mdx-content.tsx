@@ -1,14 +1,9 @@
 "use client";
 
 import React from "react";
-import dynamic from "next/dynamic";
 import type { MDXComponents } from "mdx/types";
 import { MDXRemoteSerializeResult } from "next-mdx-remote";
-
-const MarkdownRenderer = dynamic(
-  () => import("@/components/markdown-renderer"),
-  { ssr: false }
-);
+import MarkdownRenderer from "@/components/markdown-renderer";
 
 interface MDXProps {
   mdxSource: MDXRemoteSerializeResult;

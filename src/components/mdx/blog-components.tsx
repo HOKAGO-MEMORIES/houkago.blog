@@ -17,6 +17,8 @@ type ImageFigureProps = {
   src: string;
   alt: string;
   caption?: string;
+  width?: number | string;
+  height?: number | string;
 };
 
 type YouTubeProps = {
@@ -63,7 +65,16 @@ export function Aside({ title = "Aside", children }: AsideProps) {
   );
 }
 
-export function ImageFigure({ src, alt, caption }: ImageFigureProps) {
+function toImageDimension(value: number | string | undefined) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const numericValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : undefined;
+}
+
+export function ImageFigure({ src, alt, caption, width, height }: ImageFigureProps) {
   if (!isAllowedPublicMediaSource(src)) {
     return (
       <p className="rounded-xl border border-destructive/60 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -76,14 +87,20 @@ export function ImageFigure({ src, alt, caption }: ImageFigureProps) {
     );
   }
 
+  const imageWidth = toImageDimension(width);
+  const imageHeight = toImageDimension(height);
+
   return (
-    <figure className="my-8 flex flex-col gap-3">
+    <figure className="my-8 flex flex-col items-center gap-3">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
-        className="w-full rounded-2xl border object-cover"
+        width={imageWidth}
+        height={imageHeight}
+        className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-2xl border object-contain"
         loading="lazy"
+        decoding="async"
       />
       {caption ? (
         <figcaption className="text-center text-sm text-muted-foreground">
