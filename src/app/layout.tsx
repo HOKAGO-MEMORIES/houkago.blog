@@ -6,22 +6,14 @@ import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { pretendard } from "@/style/fonts/fonts";
 import GoogleAnalytics from "@/lib/google-analytics"; 
-import { getRenderablePosts } from "@/lib/posts";
-import { extractSearchText } from "@/lib/search";
+import { getSearchPosts } from "@/lib/posts";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const searchPosts = getRenderablePosts().map((post) => ({
-    slug: post.slug,
-    title: post.title,
-    description: post.description,
-    category: post.category,
-    date: post.date,
-    searchText: extractSearchText(post.body),
-  }));
+  const searchPosts = getSearchPosts();
 
   return (
     <html lang="ko" className={pretendard.className} suppressHydrationWarning>

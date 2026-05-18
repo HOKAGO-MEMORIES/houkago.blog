@@ -4,9 +4,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
 import type { Category, Post, PostManifest } from "@/types/post";
+import type { SearchIndex } from "@/types/search";
 import { getCategoryDescription } from "@/lib/site";
 
 const MANIFEST_PATH = path.join(process.cwd(), ".generated", "posts-manifest.json");
+const SEARCH_INDEX_PATH = path.join(process.cwd(), ".generated", "search-index.json");
 
 export const BLOG_CATEGORIES: Category[] = ["algorithm", "project", "cs", "blog"];
 export const POSTS_PER_PAGE = 25;
@@ -37,7 +39,22 @@ export function getAllPosts() {
   return getPostManifest().posts;
 }
 
-export function getRenderablePosts() {
+export const getSearchIndex = cache((): SearchIndex => {
+  if (!fs.existsSync(SEARCH_INDEX_PATH)) {
+    throw new Error(
+      `Generated search index was not found at ${SEARCH_INDEX_PATH}. Run "npm run posts:sync" with POSTS_REPO_PATH set to houkago.posts, or use the GitHub Actions/Vercel prebuild pipeline.`,
+    );
+  }
+
+  const raw = fs.readFileSync(SEARCH_INDEX_PATH, "utf8");
+  return JSON.parse(raw) as SearchIndex;
+});
+
+export function getSearchPosts() {
+  return getSearchIndex().posts;
+}
+
+export const getRenderablePosts = cache(() => {
   return getAllPosts().filter((post) => {
     if (post.status === "published") {
       return true;
@@ -49,7 +66,7 @@ export function getRenderablePosts() {
 
     return false;
   });
-}
+});
 
 export function getVisiblePostsByCategory(category: Category) {
   return getRenderablePosts().filter((post) => post.category === category);
