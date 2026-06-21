@@ -1,107 +1,28 @@
-# houkago.blog
+# HOUKAGO
 
-`houkago.blog` is the public frontend repository for the Houkago portfolio and blog site.
+HOUKAGO는 개발하며 배운 것들을 차분히 기록하는 개인 블로그입니다. 알고리즘 문제 풀이, CS 개념, 프로젝트 회고, 개발 과정에서 마주친 고민을 글로 정리합니다.
 
-This repository is not the content source of truth. The canonical post source lives in the private repository `houkago.posts`. `houkago.blog` reads, validates, normalizes, and renders that content into static-first pages.
+이 저장소는 HOUKAGO 블로그의 공개 프론트엔드 코드입니다. 글을 읽는 사람이 자연스럽게 탐색할 수 있도록 화면, 라우팅, 검색, 카테고리, 정적 빌드 구성을 관리합니다.
 
-## Repository Role
+## 블로그에서 다루는 글
 
-`houkago.blog` owns:
-- the public UI
-- route structure
-- build-time content validation
-- normalization for rendering
-- static page generation and deployment
+- 알고리즘 문제 풀이와 사고 과정
+- 컴퓨터 과학 개념 정리
+- 프로젝트 개발 기록과 회고
+- 블로그 운영과 개발 환경 개선 기록
 
-`houkago.blog` does not own:
-- original markdown post files
-- canonical content metadata
-- post authoring workflow
+## 저장소 역할
 
-## Build Strategy
+`houkago.blog`는 블로그를 보여주는 애플리케이션을 담당합니다. 실제 게시글 원본은 별도 저장소인 `houkago.posts`에서 관리하고, 공통 운영 문서와 작성 규칙은 `houkago.docs`에서 관리합니다.
 
-The site uses a two-repository checkout flow:
+## 기술 스택
 
-1. GitHub Actions checks out both `houkago.blog` and `houkago.posts`.
-2. The workflow builds from the `houkago.blog` workspace with `POSTS_REPO_PATH=../houkago.posts`.
-3. `houkago.blog` runs `npm run posts:sync`.
-4. The sync step reads `POSTS_REPO_PATH`, validates the content contract, rewrites local asset paths, copies static assets into `public/generated/posts`, and writes generated metadata, body, and search-index files under `.generated`.
-5. `next build` consumes those generated files to statically generate `/`, `/blog`, `/blog/{category}`, and `/blog/{slug}`.
+- Next.js
+- TypeScript
+- Tailwind CSS
+- MDX 기반 콘텐츠 렌더링
 
-Vercel does not read the private content repository directly. Private repository access stays inside GitHub Actions, which builds first and deploys prebuilt output to Vercel.
+## 관련 저장소
 
-## Environment Variables
-
-Required integration variable:
-- `POSTS_REPO_PATH`
-
-Resolution behavior:
-- use `POSTS_REPO_PATH` when provided
-- otherwise fall back to `../houkago.posts`
-- resolve the final absolute path relative to the `houkago.blog` project root instead of relying on a fixed Vercel path
-
-Optional local preview variable:
-- `POSTS_INCLUDE_DRAFTS=true`
-
-Draft preview is never enabled implicitly in production.
-
-## Local Development
-
-Recommended local layout:
-
-```text
-../
-├── houkago.blog
-└── houkago.posts
-```
-
-In that layout, `npm run dev` works with the default fallback. If your local checkout differs, set `POSTS_REPO_PATH` explicitly before running `npm run posts:sync`, `npm run dev`, or `npm run build`.
-
-## Content Contract Summary
-
-Expected non-algorithm post layout:
-
-```text
-{category}/{slug}/index.md
-{category}/{slug}/assets/*
-```
-
-Expected algorithm problem-solving layout:
-
-```text
-algorithm/{platform}/{problem-id}/index.md
-algorithm/{platform}/{problem-id}/assets/*
-```
-
-Algorithm platform paths still publish as flat post slugs: `{platform}-{problem-id}`. For example, `algorithm/boj/1002/index.md` renders at `/blog/boj-1002`.
-
-Allowed categories:
-- `algorithm`
-- `project`
-- `cs`
-- `blog`
-
-Required frontmatter:
-- `title`
-- `slug`
-- `date`
-- `description`
-- `category`
-- `status`
-
-Optional frontmatter:
-- `tags`
-- `updated`
-- `thumbnail`
-- `series`
-- `featured`
-- `draftNote`
-- `platform`
-- `problemId`
-
-## Documentation
-
-- [docs/content-source.md](./docs/content-source.md)
-- [docs/post-loading-performance-log.md](./docs/post-loading-performance-log.md)
-- [docs/routing.md](./docs/routing.md)
-- [docs/rendering-rules.md](./docs/rendering-rules.md)
+- `houkago.posts`: 게시글 원본과 콘텐츠 자산
+- `houkago.docs`: 아키텍처, 작성 규칙, 운영 문서
