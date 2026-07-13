@@ -10,6 +10,7 @@
     "prebuild": "npm run posts:sync",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
     "lint": "next lint",
     "sitemap": "next-sitemap --config next-sitemap.config.cjs"
   },
@@ -47,6 +48,7 @@
     "eslint-config-next": "^15.5.12",
     "postcss": "^8",
     "tailwindcss": "^4.0.8",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

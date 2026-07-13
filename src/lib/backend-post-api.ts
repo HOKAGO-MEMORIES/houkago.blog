@@ -189,6 +189,11 @@ function normalizeBaseUrl(value: string) {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new BackendPostConfigurationError("Backend post API base URL must use HTTP or HTTPS.");
   }
+  if (url.username || url.password) {
+    throw new BackendPostConfigurationError(
+      "Backend post API base URL must not contain credentials.",
+    );
+  }
   if (url.search || url.hash) {
     throw new BackendPostConfigurationError(
       "Backend post API base URL must not contain a query string or fragment.",
