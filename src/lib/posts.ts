@@ -139,7 +139,7 @@ export function getStaticBlogSegments() {
   return [...categories, ...posts];
 }
 
-export function getPostRoute(post: Post) {
+export function getPostRoute(post: Pick<Post, "slug">) {
   return `/blog/${post.slug}`;
 }
 

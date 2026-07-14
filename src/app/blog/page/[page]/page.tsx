@@ -3,18 +3,12 @@ import PageLayout from "@/components/page-layout";
 import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
 import {
-  POSTS_PER_PAGE,
-  getArchivePagination,
-  getArchiveRoute,
-} from "@/lib/posts";
+  loadBackendPostPage,
+  parsePaginatedBlogPageParam,
+} from "@/lib/backend-post-page-loader";
+import { POSTS_PER_PAGE, getArchiveRoute } from "@/lib/posts";
 
-export function generateStaticParams() {
-  const { totalPages } = getArchivePagination(1);
-
-  return Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) => ({
-    page: String(index + 2),
-  }));
-}
+export const revalidate = 300;
 
 export default async function BlogArchivePage({
   params,
@@ -22,15 +16,18 @@ export default async function BlogArchivePage({
   params: Promise<{ page: string }>;
 }) {
   const { page } = await params;
-  const pageNumber = Number(page);
+  const pageNumber = parsePaginatedBlogPageParam(page);
 
-  if (!Number.isInteger(pageNumber) || pageNumber <= 1) {
+  if (pageNumber === null || pageNumber <= 1) {
     notFound();
   }
 
-  const archive = getArchivePagination(pageNumber);
+  const archive = await loadBackendPostPage({
+    frontendPage: pageNumber,
+    pageSize: POSTS_PER_PAGE,
+  });
 
-  if (archive.currentPage !== pageNumber) {
+  if (archive.outOfRange) {
     notFound();
   }
 

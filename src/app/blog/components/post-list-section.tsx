@@ -3,9 +3,14 @@ import Link from "next/link";
 import type { Post } from "@/types/post";
 import { getPostRoute } from "@/lib/posts";
 
+type PostListItem = Pick<
+  Post,
+  "slug" | "title" | "description" | "category" | "date" | "featured" | "thumbnail"
+>;
+
 interface PostListSectionProps {
   title?: string;
-  posts: Post[];
+  posts: PostListItem[];
   kicker?: string;
   description?: string;
   id?: string;

@@ -85,7 +85,7 @@ export function adaptBackendPostPage(page: BackendPostPage): FrontendPostPage {
     first: page.first,
     last: page.last,
     empty: page.empty,
-    outOfRange: page.totalPages > 0 && page.number >= page.totalPages,
+    outOfRange: page.number > 0 && page.number >= page.totalPages,
   };
 }
 

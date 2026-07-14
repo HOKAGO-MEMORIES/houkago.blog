@@ -101,4 +101,20 @@ describe("post response adapter", () => {
     expect(adapted.empty).toBe(true);
     expect(adapted.outOfRange).toBe(true);
   });
+
+  it("distinguishes the first page of an empty dataset from later pages", () => {
+    const emptyFirstPage = adaptBackendPostPage({
+      ...emptyBackendPostPageFixture,
+      number: 0,
+      totalPages: 0,
+    });
+    const emptyLaterPage = adaptBackendPostPage({
+      ...emptyBackendPostPageFixture,
+      number: 1,
+      totalPages: 0,
+    });
+
+    expect(emptyFirstPage.outOfRange).toBe(false);
+    expect(emptyLaterPage.outOfRange).toBe(true);
+  });
 });
