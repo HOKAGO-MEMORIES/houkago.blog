@@ -24,12 +24,14 @@ HOUKAGO는 개발하며 배운 것들을 차분히 기록하는 개인 블로그
 
 ## 콘텐츠 조회 전환 상태
 
-`/blog/page/[page]`는 Next.js server-only client를 통해 backend post list API를 사용하며 300초
-revalidation을 적용합니다. Backend URL은 server-side `HOUKAGO_API_BASE_URL`로 주입합니다.
+`/blog`의 All Posts 첫 페이지와 `/blog/page/[page]`는 Next.js server-only client를 통해 backend
+post list API를 사용하며 300초 revalidation을 적용합니다. `/blog`는 요청 시 SSR하여 frontend
+build가 backend API 응답에 의존하지 않습니다. Backend URL은 server-side
+`HOUKAGO_API_BASE_URL`로 주입합니다.
 
-현재는 부분 전환 단계입니다. `/blog` 메인, 글 상세, category, tag, search, MDX, asset, sitemap,
-local draft preview는 기존 `houkago.posts` 기반 생성 파이프라인을 유지합니다. Backend 오류 시
-local 데이터로 자동 fallback하지 않습니다.
+현재는 부분 전환 단계입니다. `/blog`의 featured, recent, category 정보와 글 상세, category, tag,
+search, MDX, asset, sitemap, local draft preview는 기존 `houkago.posts` 기반 생성 파이프라인을
+유지합니다. Backend 오류 시 All Posts를 local 데이터로 자동 fallback하지 않습니다.
 
 ## 관련 저장소
 

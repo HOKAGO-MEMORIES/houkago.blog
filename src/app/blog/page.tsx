@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import PageLayout from "@/components/page-layout";
 import RecentPosts from "@/app/components/recent-posts";
 import CategoryHighlightsSection from "@/app/blog/components/category-highlights-section";
@@ -9,12 +10,14 @@ import PostListSection from "@/app/blog/components/post-list-section";
 import {
   BLOG_CATEGORIES,
   POSTS_PER_PAGE,
-  getArchivePagination,
   getArchiveRoute,
   getCategoryRoute,
   getRenderablePosts,
 } from "@/lib/posts";
+import { loadBackendPostPage } from "@/lib/backend-post-page-loader";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/site";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: `Blog | ${SITE_NAME}`,
@@ -44,9 +47,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  await connection();
+
   const posts = getRenderablePosts();
-  const archive = getArchivePagination(1);
+  const archive = await loadBackendPostPage({
+    frontendPage: 1,
+    pageSize: POSTS_PER_PAGE,
+  });
 
   return (
     <PageLayout

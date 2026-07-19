@@ -18,6 +18,26 @@ import {
 } from "./fixtures/backend-post";
 
 describe("backend post page loader", () => {
+  it("loads the blog main first page as backend page 0", async () => {
+    const fetchPage = vi
+      .fn<BackendPostPageFetcher>()
+      .mockResolvedValue(backendPostPageFixture);
+
+    const result = await loadBackendPostPage({
+      frontendPage: 1,
+      pageSize: 25,
+      fetchPage,
+    });
+
+    expect(fetchPage).toHaveBeenCalledWith(
+      { page: 0, size: 25 },
+      { revalidate: 300 },
+    );
+    expect(result.currentPage).toBe(1);
+    expect(result.totalItems).toBe(3);
+    expect(result.totalPages).toBe(2);
+  });
+
   it("loads frontend page 2 as backend page 1 with the current page size and revalidation", async () => {
     const fetchPage = vi.fn<BackendPostPageFetcher>().mockResolvedValue({
       ...backendPostPageFixture,
