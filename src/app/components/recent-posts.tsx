@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { cn } from "@/components/ui/utils";
-import { getPostRoute, getRecentPosts } from "@/lib/posts";
+import type { FrontendPostSummary } from "@/lib/backend-post-adapter";
+import { getPostRoute } from "@/lib/posts";
+import {
+  DEFAULT_RECENT_POST_COUNT,
+  selectRecentPosts,
+} from "@/lib/recent-posts";
 
 interface RecentPostsProps {
+  posts: readonly FrontendPostSummary[];
   limit?: number;
   title?: string;
   description?: string;
@@ -10,12 +16,13 @@ interface RecentPostsProps {
 }
 
 export default function RecentPosts({
-  limit = 5,
+  posts,
+  limit = DEFAULT_RECENT_POST_COUNT,
   title = "Recent Posts",
   description,
   className,
 }: RecentPostsProps) {
-  const recentPosts = getRecentPosts(limit);
+  const recentPosts = selectRecentPosts(posts, limit);
 
   return (
     <section className={cn("flex flex-col gap-5", className)}>

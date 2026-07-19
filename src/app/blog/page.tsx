@@ -84,6 +84,7 @@ export default async function BlogPage() {
       <FeaturedPostsSection />
 
       <RecentPosts
+        posts={archive.posts}
         title="Recent Posts"
         description="최근 공개된 글을 시간순으로 빠르게 훑어볼 수 있습니다."
       />
