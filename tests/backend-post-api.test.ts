@@ -65,6 +65,22 @@ describe("backend post API success and contract parsing", () => {
     expect(result.content[0].tags).toEqual(["backend", "testing"]);
   });
 
+  it.each([
+    [undefined, "https://example.test/api/posts?page=0&size=3"],
+    [true, "https://example.test/api/posts?page=0&size=3&featured=true"],
+    [false, "https://example.test/api/posts?page=0&size=3&featured=false"],
+  ])("serializes the optional featured filter as %s", async (featured, expectedUrl) => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({ page: 0, size: 3, featured });
+
+    expect(readFetchCall(fetchMock).url).toBe(expectedUrl);
+  });
+
   it("encodes detail slugs and preserves raw body", async () => {
     const fetchMock = createFetchMock(jsonResponse(backendPostDetailFixture));
     const client = createBackendPostApiClient({

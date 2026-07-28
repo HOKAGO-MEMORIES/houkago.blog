@@ -1,16 +1,15 @@
 import Link from "next/link";
-import { getFeaturedPosts, getPostRoute } from "@/lib/posts";
+import type { FrontendPostSummary } from "@/lib/backend-post-adapter";
+import { getPostRoute } from "@/lib/posts";
 
 interface FeaturedPostsSectionProps {
-  limit?: number;
+  posts: readonly FrontendPostSummary[];
 }
 
 export default function FeaturedPostsSection({
-  limit = 3,
+  posts,
 }: FeaturedPostsSectionProps) {
-  const featuredPosts = getFeaturedPosts(limit);
-
-  if (featuredPosts.length === 0) {
+  if (posts.length === 0) {
     return null;
   }
 
@@ -31,7 +30,7 @@ export default function FeaturedPostsSection({
         </Link>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        {featuredPosts.map((post) => (
+        {posts.map((post) => (
           <Link
             key={post.slug}
             href={getPostRoute(post)}

@@ -33,6 +33,7 @@ export type BackendPostRequestOptions = {
 export type FetchPostPageInput = {
   readonly page: number;
   readonly size: number;
+  readonly featured?: boolean;
 };
 
 export type BackendPostApiClient = {
@@ -115,10 +116,14 @@ export function createBackendPostApiClient({
 
       const endpoint = "/api/posts";
       const url = new URL("api/posts", normalizedBaseUrl);
-      url.search = new URLSearchParams({
+      const searchParams = new URLSearchParams({
         page: String(input.page),
         size: String(input.size),
-      }).toString();
+      });
+      if (input.featured !== undefined) {
+        searchParams.set("featured", String(input.featured));
+      }
+      url.search = searchParams.toString();
 
       const response = await request(fetchImpl, url, endpoint, options);
       ensureSuccessfulResponse(response, endpoint);

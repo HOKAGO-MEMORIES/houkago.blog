@@ -14,6 +14,7 @@ import {
   getCategoryRoute,
   getRenderablePosts,
 } from "@/lib/posts";
+import { loadBackendFeaturedPosts } from "@/lib/backend-featured-post-loader";
 import { loadBackendPostPage } from "@/lib/backend-post-page-loader";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/site";
 
@@ -51,10 +52,13 @@ export default async function BlogPage() {
   await connection();
 
   const posts = getRenderablePosts();
-  const archive = await loadBackendPostPage({
-    frontendPage: 1,
-    pageSize: POSTS_PER_PAGE,
-  });
+  const [archive, featuredPosts] = await Promise.all([
+    loadBackendPostPage({
+      frontendPage: 1,
+      pageSize: POSTS_PER_PAGE,
+    }),
+    loadBackendFeaturedPosts(),
+  ]);
 
   return (
     <PageLayout
@@ -81,7 +85,7 @@ export default async function BlogPage() {
         })}
       </section>
 
-      <FeaturedPostsSection />
+      <FeaturedPostsSection posts={featuredPosts} />
 
       <RecentPosts
         posts={archive.posts}

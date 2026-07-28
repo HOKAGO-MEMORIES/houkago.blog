@@ -103,12 +103,6 @@ export const getPostBodyBySlug = cache((slug: string) => {
   return postBody.body;
 });
 
-export function getFeaturedPosts(limit = 3) {
-  return getRenderablePosts()
-    .filter((post) => post.featured)
-    .slice(0, limit);
-}
-
 export function getRecentPosts(limit = 5) {
   return getRenderablePosts().slice(0, limit);
 }
