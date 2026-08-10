@@ -12,6 +12,7 @@ import {
   createBackendPostApiClient,
   fetchPostPage,
 } from "@/lib/backend-post-api";
+import { BACKEND_POSTS_CACHE_TAG } from "@/lib/backend-post-cache";
 import {
   backendPostDetailFixture,
   backendPostPageFixture,
@@ -79,6 +80,9 @@ describe("backend post API success and contract parsing", () => {
     await client.fetchPostPage({ page: 0, size: 3, featured });
 
     expect(readFetchCall(fetchMock).url).toBe(expectedUrl);
+    expect(readFetchCall(fetchMock).init?.next?.tags).toEqual([
+      BACKEND_POSTS_CACHE_TAG,
+    ]);
   });
 
   it("encodes detail slugs and preserves raw body", async () => {
@@ -95,6 +99,7 @@ describe("backend post API success and contract parsing", () => {
       "https://example.test/api/posts/guide%2F%ED%95%9C%EA%B8%80%20space",
     );
     expect(result?.rawBody).toBe(backendPostDetailFixture.rawBody);
+    expect(call.init?.next?.tags).toEqual([BACKEND_POSTS_CACHE_TAG]);
   });
 
   it.each([
@@ -289,6 +294,9 @@ describe("cache options", () => {
     await client.fetchPostPage({ page: 0, size: 2 }, options);
 
     expect(readFetchCall(fetchMock).init?.next?.revalidate).toBe(expected);
+    expect(readFetchCall(fetchMock).init?.next?.tags).toEqual([
+      BACKEND_POSTS_CACHE_TAG,
+    ]);
     expect(readFetchCall(fetchMock).init?.cache).toBeUndefined();
   });
 

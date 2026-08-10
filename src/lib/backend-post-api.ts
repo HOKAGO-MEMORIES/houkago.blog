@@ -7,6 +7,7 @@ import type {
   BackendPostPage,
   BackendSort,
 } from "@/types/backend-post";
+import { BACKEND_POSTS_CACHE_TAG } from "@/lib/backend-post-cache";
 
 const API_BASE_URL_ENV = "HOUKAGO_API_BASE_URL";
 const MAX_PAGE_SIZE = 50;
@@ -16,6 +17,7 @@ export const DEFAULT_POST_REVALIDATE_SECONDS = 300;
 type NextFetchRequestInit = RequestInit & {
   next?: {
     revalidate?: number | false;
+    tags?: readonly string[];
   };
 };
 
@@ -247,6 +249,7 @@ function createRequestInit(options?: BackendPostRequestOptions): NextFetchReques
   } else {
     init.next = {
       revalidate: options?.revalidate ?? DEFAULT_POST_REVALIDATE_SECONDS,
+      tags: [BACKEND_POSTS_CACHE_TAG],
     };
   }
 
