@@ -57,7 +57,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: houkago.blog/package-lock.json
+          cache-dependency-path: |
+            houkago.blog/package-lock.json
+            houkago.posts/package-lock.json
+
+      - name: Install posts tooling dependencies
+        if: steps.mode.outputs.value == 'direct'
+        working-directory: houkago.posts
+        run: npm ci
+
+      - name: Validate posts content
+        if: steps.mode.outputs.value == 'direct'
+        working-directory: houkago.posts
+        run: npm run validate:content
 
       - name: Install Vercel CLI
         if: steps.mode.outputs.value == 'direct'
@@ -141,7 +153,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: houkago.blog/package-lock.json
+          cache-dependency-path: |
+            houkago.blog/package-lock.json
+            houkago.posts/package-lock.json
+
+      - name: Install posts tooling dependencies
+        if: steps.mode.outputs.value == 'direct'
+        working-directory: houkago.posts
+        run: npm ci
+
+      - name: Validate posts content
+        if: steps.mode.outputs.value == 'direct'
+        working-directory: houkago.posts
+        run: npm run validate:content
 
       - name: Install Vercel CLI
         if: steps.mode.outputs.value == 'direct'
