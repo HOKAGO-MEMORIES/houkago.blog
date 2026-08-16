@@ -311,6 +311,7 @@ function parseBackendPostDetail(value: unknown): BackendPostDetail {
   return {
     ...parseBackendPostListItem(object, path),
     rawBody: readString(object.rawBody, `${path}.rawBody`),
+    assetBaseUrl: readString(object.assetBaseUrl, `${path}.assetBaseUrl`),
   };
 }
 

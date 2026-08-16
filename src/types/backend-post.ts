@@ -13,6 +13,7 @@ export type BackendPostListItem = {
 
 export type BackendPostDetail = BackendPostListItem & {
   readonly rawBody: string;
+  readonly assetBaseUrl: string;
 };
 
 export type BackendSort = {

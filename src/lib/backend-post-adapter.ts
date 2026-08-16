@@ -4,6 +4,10 @@ import type {
   BackendPostListItem,
   BackendPostPage,
 } from "@/types/backend-post";
+import {
+  normalizePostAssetBaseUrl,
+  resolvePostAssetUrl,
+} from "@/lib/post-asset-url";
 
 const SUPPORTED_CATEGORIES: readonly Category[] = ["algorithm", "project", "cs", "blog"];
 const MAX_PAGE_SIZE = 50;
@@ -23,6 +27,7 @@ export type FrontendPostSummary = {
 
 export type FrontendPostDetail = FrontendPostSummary & {
   readonly rawBody: string;
+  readonly assetBaseUrl: string;
 };
 
 export type FrontendPostPage = {
@@ -67,9 +72,14 @@ export function adaptBackendPostListItem(post: BackendPostListItem): FrontendPos
 }
 
 export function adaptBackendPostDetail(post: BackendPostDetail): FrontendPostDetail {
+  const assetBaseUrl = normalizePostAssetBaseUrl(post.assetBaseUrl);
   return {
     ...adaptBackendPostListItem(post),
+    thumbnail: post.thumbnail
+      ? resolvePostAssetUrl(post.thumbnail, assetBaseUrl)
+      : undefined,
     rawBody: post.rawBody,
+    assetBaseUrl,
   };
 }
 

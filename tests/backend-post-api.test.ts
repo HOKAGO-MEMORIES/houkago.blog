@@ -99,6 +99,7 @@ describe("backend post API success and contract parsing", () => {
       "https://example.test/api/posts/guide%2F%ED%95%9C%EA%B8%80%20space",
     );
     expect(result?.rawBody).toBe(backendPostDetailFixture.rawBody);
+    expect(result?.assetBaseUrl).toBe(backendPostDetailFixture.assetBaseUrl);
     expect(call.init?.next?.tags).toEqual([BACKEND_POSTS_CACHE_TAG]);
   });
 
@@ -142,6 +143,8 @@ describe("backend post API success and contract parsing", () => {
   it.each([
     [{ ...backendPostDetailFixture, rawBody: undefined }, "detail.rawBody"],
     [{ ...backendPostDetailFixture, rawBody: 42 }, "detail.rawBody"],
+    [{ ...backendPostDetailFixture, assetBaseUrl: undefined }, "detail.assetBaseUrl"],
+    [{ ...backendPostDetailFixture, assetBaseUrl: 42 }, "detail.assetBaseUrl"],
   ])("rejects invalid detail contracts", async (body, expectedPath) => {
     const client = createBackendPostApiClient({
       baseUrl: "https://example.test",

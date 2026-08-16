@@ -69,8 +69,20 @@ describe("post response adapter", () => {
     const adapted = adaptBackendPostDetail(backendPostDetailFixture);
 
     expect(adapted.rawBody).toBe(backendPostDetailFixture.rawBody);
+    expect(adapted.assetBaseUrl).toBe(backendPostDetailFixture.assetBaseUrl);
     expect(adapted.tags).toEqual(backendPostDetailFixture.tags);
     expect(adapted.tags).not.toBe(backendPostDetailFixture.tags);
+  });
+
+  it("resolves a detail thumbnail against its public asset base URL", () => {
+    const adapted = adaptBackendPostDetail({
+      ...backendPostDetailFixture,
+      thumbnail: "./assets/thumbnail image.png",
+    });
+
+    expect(adapted.thumbnail).toBe(
+      "https://assets.example.test/assets/posts/synthetic-post/thumbnail%20image.png",
+    );
   });
 
   it("preserves backend order and converts page metadata", () => {

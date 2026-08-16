@@ -38,6 +38,7 @@ export const nullableBackendPostListItemFixture: BackendPostListItem = {
 export const backendPostDetailFixture: BackendPostDetail = {
   ...backendPostListItemFixture,
   rawBody: "# Synthetic body\n\nBody content is preserved.\n",
+  assetBaseUrl: "https://assets.example.test/assets/posts/synthetic-post/",
 };
 
 export const backendPostPageFixture: BackendPostPage = {
