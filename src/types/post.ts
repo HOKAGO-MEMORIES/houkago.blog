@@ -20,13 +20,6 @@ export type Post = {
   path: string;
 };
 
-export type PostBody = {
-  version: number;
-  generatedAt: string;
-  slug: string;
-  body: string;
-};
-
 export type PostManifest = {
   version: number;
   generatedAt: string;

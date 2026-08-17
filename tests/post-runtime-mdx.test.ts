@@ -10,6 +10,8 @@ describe("runtime post MDX serialization", () => {
 
 Paragraph with [an external link](https://example.test) and \`inline code\`.
 
+Inline math $x^2 + y^2 = z^2$.
+
 ![cover](./assets/cover.png)
 
 ![nested](./assets/diagrams/flow-chart.png)
@@ -31,6 +33,7 @@ const answer = 42;
     expect(result.compiledSource).toContain('"data-language": "ts"');
     expect(result.compiledSource).toContain('children: " answer"');
     expect(result.compiledSource).toContain("https://example.test");
+    expect(result.compiledSource).toContain("katex");
     expect(result.compiledSource).toContain(
       "https://assets.example.test/assets/posts/runtime-post/cover.png",
     );

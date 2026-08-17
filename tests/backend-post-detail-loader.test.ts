@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createBackendPostDetailLoader } from "@/lib/backend-post-detail-loader";
-import type { BackendPostApiClient } from "@/lib/backend-post-api";
+import {
+  type BackendPostApiClient,
+  BackendPostContractError,
+  BackendPostHttpError,
+  BackendPostInvalidJsonError,
+} from "@/lib/backend-post-api";
 import { backendPostDetailFixture } from "./fixtures/backend-post";
 
 type FetchPostDetail = BackendPostApiClient["fetchPostDetail"];
@@ -44,8 +49,12 @@ describe("backend post detail loader", () => {
     await expect(loadDetail("missing-post")).resolves.toBeNull();
   });
 
-  it("does not convert backend failures into not found or local fallback", async () => {
-    const failure = new Error("backend unavailable");
+  it.each([
+    new Error("backend unavailable"),
+    new BackendPostHttpError(500, "/api/posts/synthetic-post"),
+    new BackendPostInvalidJsonError("/api/posts/synthetic-post"),
+    new BackendPostContractError("detail.rawBody"),
+  ])("does not convert %s into not found or local fallback", async (failure) => {
     const loadDetail = createBackendPostDetailLoader(
       vi.fn<FetchPostDetail>().mockRejectedValue(failure),
     );

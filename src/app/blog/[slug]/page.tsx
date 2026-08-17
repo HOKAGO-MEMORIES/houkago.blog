@@ -5,17 +5,15 @@ import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
 import { blogMDXComponents } from "@/components/mdx/blog-components";
 import { MDXContent } from "@/components/mdx-content";
-import { getSerializedMDX } from "@/lib/mdx";
+import { loadBackendPostDetail } from "@/lib/backend-post-detail-loader";
 import {
   POSTS_PER_PAGE,
   getCategoryPageRoute,
   getCategoryPagination,
   getCategorySummary,
   getCategoryRoute,
-  getPostBodyBySlug,
-  getPostBySlug,
   getPostRoute,
-  getStaticBlogSegments,
+  getStaticCategorySegments,
   getVisiblePostsByCategory,
   getTagRoute,
   isCategorySegment,
@@ -30,7 +28,7 @@ import {
 } from "@/lib/site";
 
 export function generateStaticParams() {
-  return getStaticBlogSegments();
+  return getStaticCategorySegments();
 }
 
 export async function generateMetadata({
@@ -79,10 +77,11 @@ export async function generateMetadata({
     };
   }
 
-  const post = getPostBySlug(slug);
-  if (!post) {
+  const detail = await loadBackendPostDetail(slug);
+  if (!detail) {
     return {};
   }
+  const { post } = detail;
 
   const title = getPostTitle(post.title);
   const canonical = getPostRoute(post);
@@ -153,13 +152,12 @@ export default async function BlogSegmentPage({
     );
   }
 
-  const post = getPostBySlug(slug);
-  const body = getPostBodyBySlug(slug);
-  if (!post || body === undefined) {
+  const detail = await loadBackendPostDetail(slug);
+  if (!detail) {
     notFound();
   }
 
-  const mdxSource = await getSerializedMDX(body);
+  const { post, mdxSource } = detail;
   const mdxComponents = post.category === "blog" ? blogMDXComponents : undefined;
 
   return (

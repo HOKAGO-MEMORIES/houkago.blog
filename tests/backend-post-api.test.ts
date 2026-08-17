@@ -8,6 +8,7 @@ import {
   BackendPostHttpError,
   BackendPostInputError,
   BackendPostInvalidJsonError,
+  DEFAULT_POST_REVALIDATE_SECONDS,
   type BackendPostRequestOptions,
   createBackendPostApiClient,
   fetchPostPage,
@@ -100,6 +101,7 @@ describe("backend post API success and contract parsing", () => {
     );
     expect(result?.rawBody).toBe(backendPostDetailFixture.rawBody);
     expect(result?.assetBaseUrl).toBe(backendPostDetailFixture.assetBaseUrl);
+    expect(call.init?.next?.revalidate).toBe(DEFAULT_POST_REVALIDATE_SECONDS);
     expect(call.init?.next?.tags).toEqual([BACKEND_POSTS_CACHE_TAG]);
   });
 
