@@ -1,16 +1,17 @@
 import type { Category } from "@/types/post";
 
-export type SearchPost = {
-  slug: string;
-  title: string;
-  description: string;
-  category: Category;
-  date: string;
-  searchText: string;
+export type SearchResultItem = {
+  readonly slug: string;
+  readonly title: string;
+  readonly description: string;
+  readonly category: Category;
+  readonly date: string;
 };
 
-export type SearchIndex = {
-  version: number;
-  generatedAt: string;
-  posts: SearchPost[];
+export type SearchResponse = {
+  readonly items: readonly SearchResultItem[];
+  readonly totalElements: number;
+  readonly page: number;
+  readonly size: number;
+  readonly totalPages: number;
 };

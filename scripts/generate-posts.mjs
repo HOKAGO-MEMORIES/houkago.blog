@@ -12,7 +12,6 @@ const PROJECT_ROOT = path.resolve(SCRIPT_DIR, "..");
 const DEFAULT_POSTS_REPO_PATH = "../houkago.posts";
 const GENERATED_DIR = path.resolve(PROJECT_ROOT, ".generated");
 const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
-const SEARCH_INDEX_PATH = path.join(GENERATED_DIR, "search-index.json");
 const POST_BODY_DIR = path.join(GENERATED_DIR, "post-bodies");
 const PUBLIC_ASSET_ROOT = path.resolve(PROJECT_ROOT, "public", "generated", "posts");
 const PUBLIC_ASSET_BASE = "/generated/posts";
@@ -66,21 +65,7 @@ function main() {
     posts: sortedPosts.map(toManifestPost),
   };
 
-  const searchIndex = {
-    version: 1,
-    generatedAt,
-    posts: sortedPosts.filter(isSearchablePost).map((post) => ({
-      slug: post.slug,
-      title: post.title,
-      description: post.description,
-      category: post.category,
-      date: post.date,
-      searchText: extractSearchText(post.body),
-    })),
-  };
-
   fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-  fs.writeFileSync(SEARCH_INDEX_PATH, `${JSON.stringify(searchIndex, null, 2)}\n`, "utf8");
   writePostBodies(sortedPosts, generatedAt);
   console.log(`Generated ${manifest.posts.length} posts from ${postsRepo.absolutePath} (${postsRepo.strategy})`);
 }
@@ -118,26 +103,6 @@ function getPostBodyRelativePath(slug) {
 
 function isDraftPreviewEnabled() {
   return process.env.NODE_ENV !== "production" && process.env.POSTS_INCLUDE_DRAFTS === "true";
-}
-
-function isSearchablePost(post) {
-  return post.status === "published" || (post.status === "draft" && isDraftPreviewEnabled());
-}
-
-function extractSearchText(markdown) {
-  return markdown
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/~~~[\s\S]*?~~~/g, " ")
-    .replace(/`[^`\n]*`/g, " ")
-    .replace(/!\[[^\]]*]\([^)]+\)/g, " ")
-    .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/[#>*_~|-]/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function resolvePostsRepository() {

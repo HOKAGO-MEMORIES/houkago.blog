@@ -1,0 +1,3 @@
+export const MAX_POST_SEARCH_QUERY_LENGTH = 100;
+export const SEARCH_RESULT_PAGE_SIZE = 20;
+export const SEARCH_DEBOUNCE_MS = 300;

@@ -8,12 +8,14 @@ import type {
   BackendSort,
 } from "@/types/backend-post";
 import { BACKEND_POSTS_CACHE_TAG } from "@/lib/backend-post-cache";
+import { MAX_POST_SEARCH_QUERY_LENGTH } from "@/lib/post-search-contract";
+
+export { MAX_POST_SEARCH_QUERY_LENGTH } from "@/lib/post-search-contract";
 
 const API_BASE_URL_ENV = "HOUKAGO_API_BASE_URL";
 const MAX_PAGE_SIZE = 50;
 
 export const DEFAULT_POST_REVALIDATE_SECONDS = 300;
-export const MAX_POST_SEARCH_QUERY_LENGTH = 100;
 
 type NextFetchRequestInit = RequestInit & {
   next?: {

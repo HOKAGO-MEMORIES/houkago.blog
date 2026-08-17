@@ -3,93 +3,69 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { SearchPost } from "@/types/search";
+import { useEffect, useState } from "react";
+import type { SearchResponse } from "@/types/search";
 import { Button } from "@/components/ui/button";
+import {
+  MAX_POST_SEARCH_QUERY_LENGTH,
+  SEARCH_DEBOUNCE_MS,
+} from "@/lib/post-search-contract";
+import { fetchSearchResults } from "@/lib/search-client";
 
-type SearchIndexResponse = {
-  posts: SearchPost[];
-};
-
-let cachedSearchPosts: SearchPost[] | null = null;
-let searchPostsRequest: Promise<SearchPost[]> | null = null;
-
-async function loadSearchPosts() {
-  if (cachedSearchPosts) {
-    return cachedSearchPosts;
-  }
-
-  searchPostsRequest ??= fetch("/api/search-index")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Failed to load search index.");
-      }
-
-      return response.json() as Promise<SearchIndexResponse>;
-    })
-    .then((data) => {
-      cachedSearchPosts = data.posts;
-      return data.posts;
-    })
-    .finally(() => {
-      searchPostsRequest = null;
-    });
-
-  return searchPostsRequest;
-}
+type SearchState =
+  | { readonly status: "idle" }
+  | { readonly status: "loading" }
+  | { readonly status: "results"; readonly response: SearchResponse }
+  | { readonly status: "error"; readonly message: string };
 
 export default function SearchDialog() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [posts, setPosts] = useState<SearchPost[]>(cachedSearchPosts ?? []);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const normalizedQuery = query.trim().toLowerCase();
+  const [searchState, setSearchState] = useState<SearchState>({ status: "idle" });
+  const normalizedQuery = query.trim();
 
   useEffect(() => {
-    if (!open || cachedSearchPosts) {
-      if (cachedSearchPosts) {
-        setPosts(cachedSearchPosts);
-      }
+    if (!open) {
+      return;
+    }
+    if (!normalizedQuery) {
+      setSearchState({ status: "idle" });
+      return;
+    }
+    if (normalizedQuery.length > MAX_POST_SEARCH_QUERY_LENGTH) {
+      setSearchState({
+        status: "error",
+        message: `검색어는 ${MAX_POST_SEARCH_QUERY_LENGTH}자 이하로 입력해주세요.`,
+      });
       return;
     }
 
+    const controller = new AbortController();
     let active = true;
-    setLoading(true);
-    setFailed(false);
-
-    loadSearchPosts()
-      .then((nextPosts) => {
-        if (active) {
-          setPosts(nextPosts);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setFailed(true);
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
+    setSearchState({ status: "loading" });
+    const debounceTimer = window.setTimeout(() => {
+      fetchSearchResults(normalizedQuery, { signal: controller.signal })
+        .then((response) => {
+          if (active) {
+            setSearchState({ status: "results", response });
+          }
+        })
+        .catch((error: unknown) => {
+          if (active && !(error instanceof DOMException && error.name === "AbortError")) {
+            setSearchState({
+              status: "error",
+              message: "검색 결과를 불러오지 못했습니다.",
+            });
+          }
+        });
+    }, SEARCH_DEBOUNCE_MS);
 
     return () => {
       active = false;
+      window.clearTimeout(debounceTimer);
+      controller.abort();
     };
-  }, [open]);
-
-  const results = useMemo(() => {
-    if (!normalizedQuery || loading || failed) {
-      return [];
-    }
-
-    return posts.filter((post) => {
-      const haystack = `${post.title} ${post.searchText}`.toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-  }, [failed, loading, normalizedQuery, posts]);
+  }, [normalizedQuery, open]);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -134,27 +110,31 @@ export default function SearchDialog() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              maxLength={MAX_POST_SEARCH_QUERY_LENGTH}
               placeholder="제목이나 본문 내용을 검색해보세요"
               className="rounded-2xl border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
             />
           </label>
 
-          {loading ? (
+          {searchState.status === "loading" ? (
             <div className="rounded-2xl border border-dashed px-5 py-8 text-sm text-muted-foreground">
-              검색 인덱스를 불러오는 중입니다.
+              검색 결과를 불러오는 중입니다.
             </div>
-          ) : failed ? (
+          ) : searchState.status === "error" ? (
             <div className="rounded-2xl border px-5 py-8 text-sm text-muted-foreground">
-              검색 데이터를 불러오지 못했습니다.
+              {searchState.message}
             </div>
-          ) : normalizedQuery ? (
+          ) : searchState.status === "results" ? (
             <div className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto pr-1">
               <p className="text-sm text-muted-foreground">
-                검색 결과 {results.length}개
+                검색 결과 {searchState.response.totalElements}개
+                {searchState.response.totalElements > searchState.response.items.length
+                  ? ` · 최신 ${searchState.response.items.length}개 표시`
+                  : ""}
               </p>
-              {results.length > 0 ? (
+              {searchState.response.items.length > 0 ? (
                 <div className="flex flex-col">
-                  {results.map((post) => (
+                  {searchState.response.items.map((post) => (
                     <Link
                       key={post.slug}
                       href={`/blog/${post.slug}`}
