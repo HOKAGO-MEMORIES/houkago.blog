@@ -31,11 +31,15 @@ section을 숨깁니다. `/blog/page/[page]`도 Next.js server-only client를 �
 frontend build가 backend API 응답에 의존하지 않습니다. Backend URL은 server-side
 `HOUKAGO_API_BASE_URL`로 주입합니다.
 
-현재는 부분 전환 단계입니다. `/blog`의 category 정보, 글 상세, category, tag, search, MDX, asset,
-sitemap, local draft preview는 기존 `houkago.posts` 기반 생성 파이프라인을 유지합니다. Recent Posts는
-별도 backend 요청 없이 All Posts와 같은 page 0 결과를 재사용합니다. Featured 응답에 non-featured 글이
-섞이면 오류로 처리하며, Backend 오류 시 All Posts, Recent Posts, Featured Posts를 local 데이터로 자동
-fallback하지 않습니다.
+Public `/blog/[slug]` post detail과 metadata도 server-only Backend detail loader를 사용합니다. Backend
+`rawBody`는 기존 MDX renderer로 처리하고 `./assets/...`는 API의 `assetBaseUrl`로 resolve합니다. Detail
+`404`만 route not-found로 변환하며, 다른 Backend 오류에는 local generated body로 fallback하지 않습니다.
+Post slug는 frontend build에서 더 이상 열거하지 않고 요청 시 처리합니다.
+
+현재는 부분 전환 단계입니다. `/blog`의 category 정보, category, tag, search, sitemap, local draft preview
+등은 기존 `houkago.posts` 기반 생성 파이프라인을 유지합니다. Recent Posts는 별도 backend 요청 없이 All
+Posts와 같은 page 0 결과를 재사용합니다. Featured 응답에 non-featured 글이 섞이면 오류로 처리하며,
+Backend 오류 시 Backend 기반 목록과 detail을 local 데이터로 자동 fallback하지 않습니다.
 
 ## 관련 저장소
 
