@@ -28,10 +28,6 @@ type PaginatedPosts = {
   totalItems: number;
 };
 
-function isDraftPreviewEnabled() {
-  return process.env.NODE_ENV !== "production" && process.env.POSTS_INCLUDE_DRAFTS === "true";
-}
-
 export const getPostManifest = cache((): PostManifest => {
   if (!fs.existsSync(MANIFEST_PATH)) {
     throw new Error(
@@ -48,17 +44,7 @@ export function getAllPosts() {
 }
 
 export const getRenderablePosts = cache(() => {
-  return getAllPosts().filter((post) => {
-    if (post.status === "published") {
-      return true;
-    }
-
-    if (post.status === "draft" && isDraftPreviewEnabled()) {
-      return true;
-    }
-
-    return false;
-  });
+  return getAllPosts().filter((post) => post.status === "published");
 });
 
 export function getRecentPosts(limit = 5) {

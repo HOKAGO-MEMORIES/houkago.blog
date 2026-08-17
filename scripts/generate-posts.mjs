@@ -101,10 +101,6 @@ function getPostBodyRelativePath(slug) {
   return toPosix(path.join("post-bodies", `${encodeURIComponent(slug)}.json`));
 }
 
-function isDraftPreviewEnabled() {
-  return process.env.NODE_ENV !== "production" && process.env.POSTS_INCLUDE_DRAFTS === "true";
-}
-
 function resolvePostsRepository() {
   const configuredPath = process.env.POSTS_REPO_PATH?.trim();
   const inputPath = configuredPath || DEFAULT_POSTS_REPO_PATH;

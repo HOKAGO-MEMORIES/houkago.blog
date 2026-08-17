@@ -46,10 +46,15 @@ order를 사용합니다. Unknown Tag와 범위를 벗어난 page는 기존처�
 열거하지 않습니다. Tag fetch는 다른 post API 요청과 같은 `houkago-posts` cache tag와 300초 fallback을
 사용합니다.
 
-현재는 부분 전환 단계입니다. Search, sitemap, local draft preview 등은 기존 `houkago.posts` 기반 생성
-파이프라인을 유지합니다. Recent Posts는 별도 backend 요청 없이 All Posts와 같은 page 0 결과를
-재사용합니다. Featured 응답에 non-featured 글이 섞이면 오류로 처리하며, Backend 오류 시 Backend 기반
-목록, detail, category, Tag를 local 데이터로 자동 fallback하지 않습니다.
+Search와 runtime sitemap까지 Backend public post API를 사용합니다. Sitemap은 공개 목록을 50개 단위로
+조회하며 build 중에는 Backend를 호출하지 않습니다. Recent Posts는 별도 backend 요청 없이 All Posts와
+같은 page 0 결과를 재사용합니다. Featured 응답에 non-featured 글이 섞이면 오류로 처리하며, Backend
+오류 시 Backend 기반 목록, detail, category, Tag, Search, Sitemap을 local 데이터로 자동 fallback하지
+않습니다.
+
+Production build는 `houkago.posts` checkout이나 draft preview option을 요구하지 않습니다. 명시적
+`posts:sync`, local `predev`, generator와 generated output은 Phase 7 cleanup 전까지 legacy authoring/build
+도구로 남아 있으며 production/runtime consumer는 없습니다.
 
 ## 관련 저장소
 
