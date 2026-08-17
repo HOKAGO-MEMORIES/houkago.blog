@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { FrontendPostSummary } from "@/lib/backend-post-adapter";
-import { getPostRoute } from "@/lib/posts";
+import { getPostRoute } from "@/lib/post-navigation";
 
 interface FeaturedPostsSectionProps {
   posts: readonly FrontendPostSummary[];

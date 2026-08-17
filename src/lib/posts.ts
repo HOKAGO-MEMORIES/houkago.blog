@@ -3,16 +3,25 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
-import type { Category, Post, PostManifest } from "@/types/post";
+import type { Post, PostManifest } from "@/types/post";
 import type { SearchIndex } from "@/types/search";
-import { getCategoryDescription } from "@/lib/site";
+import { POSTS_PER_PAGE } from "@/lib/post-navigation";
+
+export {
+  BLOG_CATEGORIES,
+  POSTS_PER_PAGE,
+  getArchiveRoute,
+  getCategoryPageRoute,
+  getCategoryRoute,
+  getCategorySummary,
+  getPostRoute,
+  getTagRoute,
+  isCategorySegment,
+} from "@/lib/post-navigation";
 
 const GENERATED_DIR = path.join(process.cwd(), ".generated");
 const MANIFEST_PATH = path.join(GENERATED_DIR, "posts-manifest.json");
 const SEARCH_INDEX_PATH = path.join(GENERATED_DIR, "search-index.json");
-
-export const BLOG_CATEGORIES: Category[] = ["algorithm", "project", "cs", "blog"];
-export const POSTS_PER_PAGE = 25;
 
 type PaginatedPosts = {
   posts: Post[];
@@ -69,60 +78,8 @@ export const getRenderablePosts = cache(() => {
   });
 });
 
-export function getVisiblePostsByCategory(category: Category) {
-  return getRenderablePosts().filter((post) => post.category === category);
-}
-
 export function getRecentPosts(limit = 5) {
   return getRenderablePosts().slice(0, limit);
-}
-
-export function getCategoryHighlights() {
-  return BLOG_CATEGORIES.map((category) => {
-    const posts = getVisiblePostsByCategory(category);
-    return {
-      category,
-      count: posts.length,
-      posts: posts.slice(0, 3),
-    };
-  }).filter((group) => group.count > 0);
-}
-
-export function isCategorySegment(segment: string): segment is Category {
-  return BLOG_CATEGORIES.includes(segment as Category);
-}
-
-export function getStaticCategorySegments() {
-  return BLOG_CATEGORIES.filter(
-    (category) => getVisiblePostsByCategory(category).length > 0,
-  ).map((category) => ({
-    slug: category,
-  }));
-}
-
-export function getPostRoute(post: Pick<Post, "slug">) {
-  return `/blog/${post.slug}`;
-}
-
-export function getArchiveRoute(page = 1) {
-  return page <= 1 ? "/blog" : `/blog/page/${page}`;
-}
-
-export function getCategoryRoute(category: Category) {
-  return `/blog/${category}`;
-}
-
-export function getCategoryPageRoute(category: Category, page = 1) {
-  return page <= 1 ? getCategoryRoute(category) : `/blog/${category}/page/${page}`;
-}
-
-export function getTagRoute(tag: string, page = 1) {
-  const encodedTag = encodeURIComponent(tag);
-  return page <= 1 ? `/blog/tag/${encodedTag}` : `/blog/tag/${encodedTag}/page/${page}`;
-}
-
-export function getCategorySummary(category: Category) {
-  return getCategoryDescription(category);
 }
 
 export function getAllTags() {
@@ -151,10 +108,6 @@ export function paginatePosts(posts: Post[], page: number, pageSize = POSTS_PER_
 
 export function getArchivePagination(page: number) {
   return paginatePosts(getRenderablePosts(), page);
-}
-
-export function getCategoryPagination(category: Category, page: number) {
-  return paginatePosts(getVisiblePostsByCategory(category), page);
 }
 
 export function getTagPagination(tag: string, page: number) {

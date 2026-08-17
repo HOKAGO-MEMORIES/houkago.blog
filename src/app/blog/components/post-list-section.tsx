@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Post } from "@/types/post";
-import { getPostRoute } from "@/lib/posts";
+import { getPostRoute } from "@/lib/post-navigation";
 
 type PostListItem = Pick<
   Post,

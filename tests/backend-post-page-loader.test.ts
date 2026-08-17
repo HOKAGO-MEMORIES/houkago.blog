@@ -63,6 +63,24 @@ describe("backend post page loader", () => {
     ]);
   });
 
+  it("passes an exact category filter through to the backend page request", async () => {
+    const fetchPage = vi
+      .fn<BackendPostPageFetcher>()
+      .mockResolvedValue(backendPostPageFixture);
+
+    await loadBackendPostPage({
+      frontendPage: 2,
+      pageSize: 25,
+      category: "algorithm",
+      fetchPage,
+    });
+
+    expect(fetchPage).toHaveBeenCalledWith(
+      { page: 1, size: 25, category: "algorithm" },
+      { revalidate: 300 },
+    );
+  });
+
   it("preserves an out-of-range page result for the route to handle", async () => {
     const fetchPage = vi
       .fn<BackendPostPageFetcher>()

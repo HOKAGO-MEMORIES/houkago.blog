@@ -5,19 +5,17 @@ import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
 import { blogMDXComponents } from "@/components/mdx/blog-components";
 import { MDXContent } from "@/components/mdx-content";
+import { loadBackendCategoryPostPage } from "@/lib/backend-category-post-loader";
 import { loadBackendPostDetail } from "@/lib/backend-post-detail-loader";
 import {
   POSTS_PER_PAGE,
   getCategoryPageRoute,
-  getCategoryPagination,
   getCategorySummary,
   getCategoryRoute,
   getPostRoute,
-  getStaticCategorySegments,
-  getVisiblePostsByCategory,
   getTagRoute,
   isCategorySegment,
-} from "@/lib/posts";
+} from "@/lib/post-navigation";
 import {
   AUTHOR_NAME,
   DEFAULT_OG_IMAGE,
@@ -27,10 +25,6 @@ import {
   toSeoDate,
 } from "@/lib/site";
 
-export function generateStaticParams() {
-  return getStaticCategorySegments();
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -39,13 +33,9 @@ export async function generateMetadata({
   const { slug } = await params;
 
   if (isCategorySegment(slug)) {
-    const posts = getVisiblePostsByCategory(slug);
-    if (posts.length === 0) {
-      return {};
-    }
-
+    const pagination = await loadBackendCategoryPostPage(slug, 1);
     const title = getCategoryTitle(slug);
-    const description = `${getCategorySummary(slug)} 현재 공개된 글은 ${posts.length}개입니다.`;
+    const description = `${getCategorySummary(slug)} 현재 공개된 글은 ${pagination.totalItems}개입니다.`;
     const canonical = getCategoryRoute(slug);
 
     return {
@@ -129,9 +119,8 @@ export default async function BlogSegmentPage({
   const { slug } = await params;
 
   if (isCategorySegment(slug)) {
-    const pagination = getCategoryPagination(slug, 1);
-
-    if (pagination.totalItems === 0) {
+    const pagination = await loadBackendCategoryPostPage(slug, 1);
+    if (pagination.outOfRange) {
       notFound();
     }
 

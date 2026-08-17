@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/components/ui/utils";
 import type { FrontendPostSummary } from "@/lib/backend-post-adapter";
-import { getPostRoute } from "@/lib/posts";
+import { getPostRoute } from "@/lib/post-navigation";
 import {
   DEFAULT_RECENT_POST_COUNT,
   selectRecentPosts,

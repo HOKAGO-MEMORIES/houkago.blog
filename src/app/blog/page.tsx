@@ -7,15 +7,15 @@ import CategoryHighlightsSection from "@/app/blog/components/category-highlights
 import FeaturedPostsSection from "@/app/blog/components/featured-posts-section";
 import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
+import { loadBackendCategoryHighlights } from "@/lib/backend-category-highlights-loader";
+import { loadBackendFeaturedPosts } from "@/lib/backend-featured-post-loader";
+import { loadBackendPostPage } from "@/lib/backend-post-page-loader";
 import {
   BLOG_CATEGORIES,
   POSTS_PER_PAGE,
   getArchiveRoute,
   getCategoryRoute,
-  getRenderablePosts,
-} from "@/lib/posts";
-import { loadBackendFeaturedPosts } from "@/lib/backend-featured-post-loader";
-import { loadBackendPostPage } from "@/lib/backend-post-page-loader";
+} from "@/lib/post-navigation";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/site";
 
 export const revalidate = 300;
@@ -51,13 +51,13 @@ export const metadata: Metadata = {
 export default async function BlogPage() {
   await connection();
 
-  const posts = getRenderablePosts();
-  const [archive, featuredPosts] = await Promise.all([
+  const [archive, featuredPosts, categoryHighlights] = await Promise.all([
     loadBackendPostPage({
       frontendPage: 1,
       pageSize: POSTS_PER_PAGE,
     }),
     loadBackendFeaturedPosts(),
+    loadBackendCategoryHighlights(),
   ]);
 
   return (
@@ -68,7 +68,7 @@ export default async function BlogPage() {
     >
       <section className="grid gap-4 sm:grid-cols-2">
         {BLOG_CATEGORIES.map((category) => {
-          const count = posts.filter((post) => post.category === category).length;
+          const count = categoryHighlights.find((group) => group.category === category)?.count ?? 0;
           return (
             <Link
               key={category}
@@ -93,7 +93,7 @@ export default async function BlogPage() {
         description="최근 공개된 글을 시간순으로 빠르게 훑어볼 수 있습니다."
       />
 
-      <CategoryHighlightsSection />
+      <CategoryHighlightsSection highlights={categoryHighlights} />
 
       <PostListSection
         id="all-posts"

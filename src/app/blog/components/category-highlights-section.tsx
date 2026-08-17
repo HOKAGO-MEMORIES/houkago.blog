@@ -1,12 +1,15 @@
 import Link from "next/link";
-import {
-  getCategoryHighlights,
-  getCategoryRoute,
-  getPostRoute,
-} from "@/lib/posts";
+import type { BackendCategoryHighlight } from "@/lib/backend-category-highlights-loader";
+import { getCategoryRoute, getPostRoute } from "@/lib/post-navigation";
 
-export default function CategoryHighlightsSection() {
-  const categoryHighlights = getCategoryHighlights();
+interface CategoryHighlightsSectionProps {
+  highlights: readonly BackendCategoryHighlight[];
+}
+
+export default function CategoryHighlightsSection({
+  highlights,
+}: CategoryHighlightsSectionProps) {
+  const categoryHighlights = highlights.filter((group) => group.count > 0);
 
   if (categoryHighlights.length === 0) {
     return null;

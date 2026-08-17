@@ -36,10 +36,15 @@ Public `/blog/[slug]` post detail과 metadata도 server-only Backend detail load
 `404`만 route not-found로 변환하며, 다른 Backend 오류에는 local generated body로 fallback하지 않습니다.
 Post slug는 frontend build에서 더 이상 열거하지 않고 요청 시 처리합니다.
 
-현재는 부분 전환 단계입니다. `/blog`의 category 정보, category, tag, search, sitemap, local draft preview
-등은 기존 `houkago.posts` 기반 생성 파이프라인을 유지합니다. Recent Posts는 별도 backend 요청 없이 All
-Posts와 같은 page 0 결과를 재사용합니다. Featured 응답에 non-featured 글이 섞이면 오류로 처리하며,
-Backend 오류 시 Backend 기반 목록과 detail을 local 데이터로 자동 fallback하지 않습니다.
+Category route와 pagination은 Backend `category` filter와 pagination metadata를 사용하며 Backend 순서를
+그대로 표시합니다. `/blog`의 category count와 Category Highlights도 네 category의 page 0 요청을 병렬로
+실행해 `totalElements`와 최신 3개를 사용합니다. Category와 post가 공유하는 dynamic segment는 더 이상
+content 기반 static params를 만들지 않으므로 Backend가 unreachable한 frontend build도 성공합니다.
+
+현재는 부분 전환 단계입니다. Tag, search, sitemap, local draft preview 등은 기존 `houkago.posts` 기반
+생성 파이프라인을 유지합니다. Recent Posts는 별도 backend 요청 없이 All Posts와 같은 page 0 결과를
+재사용합니다. Featured 응답에 non-featured 글이 섞이면 오류로 처리하며, Backend 오류 시 Backend 기반
+목록, detail, category를 local 데이터로 자동 fallback하지 않습니다.
 
 ## 관련 저장소
 

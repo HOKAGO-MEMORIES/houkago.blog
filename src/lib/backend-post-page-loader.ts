@@ -21,16 +21,21 @@ export type BackendPostPageFetcher = (
 export type LoadBackendPostPageOptions = {
   readonly frontendPage: number;
   readonly pageSize: number;
+  readonly category?: string;
   readonly fetchPage?: BackendPostPageFetcher;
 };
 
 export async function loadBackendPostPage({
   frontendPage,
   pageSize,
+  category,
   fetchPage = fetchPostPage,
 }: LoadBackendPostPageOptions): Promise<FrontendPostPage> {
   const backendPagination = toBackendPagination(frontendPage, pageSize);
-  const page = await fetchPage(backendPagination, {
+  const input = category === undefined
+    ? backendPagination
+    : { ...backendPagination, category };
+  const page = await fetchPage(input, {
     revalidate: DEFAULT_POST_REVALIDATE_SECONDS,
   });
 

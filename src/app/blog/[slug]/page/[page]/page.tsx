@@ -1,25 +1,14 @@
 import { notFound } from "next/navigation";
 import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
+import { loadBackendCategoryPostPage } from "@/lib/backend-category-post-loader";
+import { parsePaginatedBlogPageParam } from "@/lib/backend-post-page-loader";
 import {
-  BLOG_CATEGORIES,
   POSTS_PER_PAGE,
   getCategoryPageRoute,
-  getCategoryPagination,
   getCategorySummary,
   isCategorySegment,
-} from "@/lib/posts";
-
-export function generateStaticParams() {
-  return BLOG_CATEGORIES.flatMap((category) => {
-    const { totalPages } = getCategoryPagination(category, 1);
-
-    return Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) => ({
-      slug: category,
-      page: String(index + 2),
-    }));
-  });
-}
+} from "@/lib/post-navigation";
 
 export default async function BlogCategoryPaginationPage({
   params,
@@ -27,15 +16,15 @@ export default async function BlogCategoryPaginationPage({
   params: Promise<{ slug: string; page: string }>;
 }) {
   const { slug, page } = await params;
-  const pageNumber = Number(page);
+  const pageNumber = parsePaginatedBlogPageParam(page);
 
-  if (!isCategorySegment(slug) || !Number.isInteger(pageNumber) || pageNumber <= 1) {
+  if (!isCategorySegment(slug) || pageNumber === null || pageNumber <= 1) {
     notFound();
   }
 
-  const pagination = getCategoryPagination(slug, pageNumber);
+  const pagination = await loadBackendCategoryPostPage(slug, pageNumber);
 
-  if (pagination.currentPage !== pageNumber || pagination.totalItems === 0) {
+  if (pagination.outOfRange) {
     notFound();
   }
 

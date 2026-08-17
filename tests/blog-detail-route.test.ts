@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const routeMocks = vi.hoisted(() => ({
   notFound: vi.fn(),
   loadBackendPostDetail: vi.fn(),
-  getStaticCategorySegments: vi.fn(),
-  getCategoryPagination: vi.fn(),
-  getVisiblePostsByCategory: vi.fn(),
+  loadBackendCategoryPostPage: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -16,16 +14,17 @@ vi.mock("@/lib/backend-post-detail-loader", () => ({
   loadBackendPostDetail: routeMocks.loadBackendPostDetail,
 }));
 
-vi.mock("@/lib/posts", () => ({
+vi.mock("@/lib/backend-category-post-loader", () => ({
+  loadBackendCategoryPostPage: routeMocks.loadBackendCategoryPostPage,
+}));
+
+vi.mock("@/lib/post-navigation", () => ({
   POSTS_PER_PAGE: 25,
   getCategoryPageRoute: (category: string, page: number) =>
     page <= 1 ? `/blog/${category}` : `/blog/${category}/page/${page}`,
-  getCategoryPagination: routeMocks.getCategoryPagination,
   getCategorySummary: (category: string) => `${category} summary`,
   getCategoryRoute: (category: string) => `/blog/${category}`,
   getPostRoute: (post: { slug: string }) => `/blog/${post.slug}`,
-  getStaticCategorySegments: routeMocks.getStaticCategorySegments,
-  getVisiblePostsByCategory: routeMocks.getVisiblePostsByCategory,
   getTagRoute: (tag: string) => `/blog/tag/${tag}`,
   isCategorySegment: (segment: string) =>
     ["algorithm", "project", "cs", "blog"].includes(segment),
@@ -39,10 +38,7 @@ vi.mock("@/components/mdx-content", () => ({
   MDXContent: () => null,
 }));
 
-import BlogSegmentPage, {
-  generateMetadata,
-  generateStaticParams,
-} from "@/app/blog/[slug]/page";
+import BlogSegmentPage, { generateMetadata } from "@/app/blog/[slug]/page";
 
 const loadedDetail = {
   post: {
@@ -72,35 +68,69 @@ beforeEach(() => {
     throw new Error("NEXT_NOT_FOUND");
   });
   routeMocks.loadBackendPostDetail.mockResolvedValue(loadedDetail);
-  routeMocks.getStaticCategorySegments.mockReturnValue([
-    { slug: "algorithm" },
-    { slug: "blog" },
-  ]);
-  routeMocks.getVisiblePostsByCategory.mockReturnValue([{ slug: "category-post" }]);
-  routeMocks.getCategoryPagination.mockReturnValue({
-    posts: [],
+  routeMocks.loadBackendCategoryPostPage.mockResolvedValue({
+    posts: [
+      { ...loadedDetail.post, slug: "category-new" },
+      { ...loadedDetail.post, slug: "category-old" },
+    ],
     currentPage: 1,
+    backendPage: 0,
+    pageSize: 25,
     totalPages: 1,
-    totalItems: 1,
+    totalItems: 2,
+    numberOfItems: 2,
+    first: true,
+    last: true,
+    empty: false,
+    outOfRange: false,
   });
 });
 
 describe("blog detail route backend cutover", () => {
-  it("pre-generates only category segments without loading backend details", () => {
-    expect(generateStaticParams()).toEqual([
-      { slug: "algorithm" },
-      { slug: "blog" },
-    ]);
-    expect(routeMocks.loadBackendPostDetail).not.toHaveBeenCalled();
-  });
-
-  it("keeps reserved category segments on the local category branch", async () => {
+  it("keeps reserved category segments on the backend category branch", async () => {
     const result = await BlogSegmentPage({
       params: Promise.resolve({ slug: "algorithm" }),
     });
 
     expect(result.type).toBe("div");
-    expect(routeMocks.getCategoryPagination).toHaveBeenCalledWith("algorithm", 1);
+    expect(routeMocks.loadBackendCategoryPostPage).toHaveBeenCalledWith("algorithm", 1);
+    expect(result.props.children[0].props.posts.map((post: { slug: string }) => post.slug)).toEqual([
+      "category-new",
+      "category-old",
+    ]);
+    expect(routeMocks.loadBackendPostDetail).not.toHaveBeenCalled();
+  });
+
+  it("uses backend category totals in category metadata", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "algorithm" }),
+    });
+
+    expect(metadata.description).toContain("2개");
+    expect(routeMocks.loadBackendCategoryPostPage).toHaveBeenCalledWith("algorithm", 1);
+  });
+
+  it("renders a known empty category instead of treating it as an error", async () => {
+    routeMocks.loadBackendCategoryPostPage.mockResolvedValue({
+      posts: [],
+      currentPage: 1,
+      backendPage: 0,
+      pageSize: 25,
+      totalPages: 0,
+      totalItems: 0,
+      numberOfItems: 0,
+      first: true,
+      last: true,
+      empty: true,
+      outOfRange: false,
+    });
+
+    const result = await BlogSegmentPage({
+      params: Promise.resolve({ slug: "project" }),
+    });
+
+    expect(result.type).toBe("div");
+    expect(routeMocks.notFound).not.toHaveBeenCalled();
     expect(routeMocks.loadBackendPostDetail).not.toHaveBeenCalled();
   });
 

@@ -6,7 +6,7 @@ import {
   loadBackendPostPage,
   parsePaginatedBlogPageParam,
 } from "@/lib/backend-post-page-loader";
-import { POSTS_PER_PAGE, getArchiveRoute } from "@/lib/posts";
+import { POSTS_PER_PAGE, getArchiveRoute } from "@/lib/post-navigation";
 
 export const revalidate = 300;
 
