@@ -41,10 +41,15 @@ Category route와 pagination은 Backend `category` filter와 pagination metadata
 실행해 `totalElements`와 최신 3개를 사용합니다. Category와 post가 공유하는 dynamic segment는 더 이상
 content 기반 static params를 만들지 않으므로 Backend가 unreachable한 frontend build도 성공합니다.
 
-현재는 부분 전환 단계입니다. Tag, search, sitemap, local draft preview 등은 기존 `houkago.posts` 기반
-생성 파이프라인을 유지합니다. Recent Posts는 별도 backend 요청 없이 All Posts와 같은 page 0 결과를
+Tag route와 pagination도 Backend의 exact `tag` filter, `totalElements`, pagination metadata와 canonical
+order를 사용합니다. Unknown Tag와 범위를 벗어난 page는 기존처럼 `404`이며, Tag segment를 build에서
+열거하지 않습니다. Tag fetch는 다른 post API 요청과 같은 `houkago-posts` cache tag와 300초 fallback을
+사용합니다.
+
+현재는 부분 전환 단계입니다. Search, sitemap, local draft preview 등은 기존 `houkago.posts` 기반 생성
+파이프라인을 유지합니다. Recent Posts는 별도 backend 요청 없이 All Posts와 같은 page 0 결과를
 재사용합니다. Featured 응답에 non-featured 글이 섞이면 오류로 처리하며, Backend 오류 시 Backend 기반
-목록, detail, category를 local 데이터로 자동 fallback하지 않습니다.
+목록, detail, category, Tag를 local 데이터로 자동 fallback하지 않습니다.
 
 ## 관련 저장소
 

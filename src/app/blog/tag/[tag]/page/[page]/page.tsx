@@ -2,23 +2,12 @@ import { notFound } from "next/navigation";
 import PageLayout from "@/components/page-layout";
 import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
+import { loadBackendTagPostPage } from "@/lib/backend-tag-post-loader";
+import { parsePaginatedBlogPageParam } from "@/lib/backend-post-page-loader";
 import {
-  decodeRouteParam,
-  getAllTags,
-  getTagPagination,
+  parseTagRouteParam,
   getTagRoute,
-} from "@/lib/posts";
-
-export function generateStaticParams() {
-  return getAllTags().flatMap((tag) => {
-    const { totalPages } = getTagPagination(tag, 1);
-
-    return Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) => ({
-      tag,
-      page: String(index + 2),
-    }));
-  });
-}
+} from "@/lib/post-navigation";
 
 export default async function BlogTagPaginationPage({
   params,
@@ -26,16 +15,16 @@ export default async function BlogTagPaginationPage({
   params: Promise<{ tag: string; page: string }>;
 }) {
   const { tag, page } = await params;
-  const normalizedTag = decodeRouteParam(tag);
-  const pageNumber = Number(page);
+  const normalizedTag = parseTagRouteParam(tag);
+  const pageNumber = parsePaginatedBlogPageParam(page);
 
-  if (!Number.isInteger(pageNumber) || pageNumber <= 1) {
+  if (normalizedTag === null || pageNumber === null || pageNumber <= 1) {
     notFound();
   }
 
-  const pagination = getTagPagination(normalizedTag, pageNumber);
+  const pagination = await loadBackendTagPostPage(normalizedTag, pageNumber);
 
-  if (pagination.currentPage !== pageNumber || pagination.totalItems === 0) {
+  if (pagination.outOfRange || pagination.totalItems === 0) {
     notFound();
   }
 

@@ -2,18 +2,11 @@ import { notFound } from "next/navigation";
 import PageLayout from "@/components/page-layout";
 import PaginationNav from "@/app/blog/components/pagination-nav";
 import PostListSection from "@/app/blog/components/post-list-section";
+import { loadBackendTagPostPage } from "@/lib/backend-tag-post-loader";
 import {
-  decodeRouteParam,
-  getAllTags,
-  getTagPagination,
+  parseTagRouteParam,
   getTagRoute,
-} from "@/lib/posts";
-
-export function generateStaticParams() {
-  return getAllTags().map((tag) => ({
-    tag,
-  }));
-}
+} from "@/lib/post-navigation";
 
 export default async function BlogTagPage({
   params,
@@ -21,8 +14,13 @@ export default async function BlogTagPage({
   params: Promise<{ tag: string }>;
 }) {
   const { tag } = await params;
-  const normalizedTag = decodeRouteParam(tag);
-  const pagination = getTagPagination(normalizedTag, 1);
+  const normalizedTag = parseTagRouteParam(tag);
+
+  if (normalizedTag === null) {
+    notFound();
+  }
+
+  const pagination = await loadBackendTagPostPage(normalizedTag, 1);
 
   if (pagination.totalItems === 0) {
     notFound();

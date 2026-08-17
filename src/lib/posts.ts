@@ -82,16 +82,6 @@ export function getRecentPosts(limit = 5) {
   return getRenderablePosts().slice(0, limit);
 }
 
-export function getAllTags() {
-  return Array.from(new Set(getRenderablePosts().flatMap((post) => post.tags))).sort((left, right) =>
-    left.localeCompare(right, "ko"),
-  );
-}
-
-export function getPostsByTag(tag: string) {
-  return getRenderablePosts().filter((post) => post.tags.includes(tag));
-}
-
 export function paginatePosts(posts: Post[], page: number, pageSize = POSTS_PER_PAGE): PaginatedPosts {
   const totalItems = posts.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -108,16 +98,4 @@ export function paginatePosts(posts: Post[], page: number, pageSize = POSTS_PER_
 
 export function getArchivePagination(page: number) {
   return paginatePosts(getRenderablePosts(), page);
-}
-
-export function getTagPagination(tag: string, page: number) {
-  return paginatePosts(getPostsByTag(tag), page);
-}
-
-export function decodeRouteParam(value: string) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
 }

@@ -29,6 +29,17 @@ export function getTagRoute(tag: string, page = 1) {
   return page <= 1 ? `/blog/tag/${encodedTag}` : `/blog/tag/${encodedTag}/page/${page}`;
 }
 
+export function parseTagRouteParam(value: string): string | null {
+  let tag: string;
+  try {
+    tag = decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+
+  return tag.trim() ? tag : null;
+}
+
 export function getCategorySummary(category: Category) {
   return getCategoryDescription(category);
 }
