@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Post } from "@/types/post";
+import type { FrontendPostSummary } from "@/lib/backend-post-adapter";
 import { getPostRoute } from "@/lib/post-navigation";
 
 type PostListItem = Pick<
-  Post,
+  FrontendPostSummary,
   "slug" | "title" | "description" | "category" | "date" | "featured" | "thumbnail"
 >;
 

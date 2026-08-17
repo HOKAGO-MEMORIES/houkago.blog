@@ -52,9 +52,9 @@ Search와 runtime sitemap까지 Backend public post API를 사용합니다. Site
 오류 시 Backend 기반 목록, detail, category, Tag, Search, Sitemap을 local 데이터로 자동 fallback하지
 않습니다.
 
-Production build는 `houkago.posts` checkout이나 draft preview option을 요구하지 않습니다. 명시적
-`posts:sync`, local `predev`, generator와 generated output은 Phase 7 cleanup 전까지 legacy authoring/build
-도구로 남아 있으며 production/runtime consumer는 없습니다.
+Production과 일반 local workflow는 `houkago.posts` checkout, generated manifest/body/assets 또는 draft
+preview option을 요구하지 않습니다. Blog의 사용자-facing content read는 Backend API를 사용하며,
+`houkago.posts`는 Backend Content Pipeline의 canonical source로 유지됩니다.
 
 ## 관련 저장소
 

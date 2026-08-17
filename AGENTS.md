@@ -5,8 +5,8 @@ Frontend repository for Houkago.
 ## Responsibilities
 
 - UI, routing, rendering, SEO, and frontend build behavior
-- consuming post data from `houkago.posts` in the current static-first model
-- consuming backend content APIs in the target backend sync/read model
+- consuming public post data through backend content APIs
+- keeping local and production builds independent of the `houkago.posts` checkout
 
 ## Reference Docs
 

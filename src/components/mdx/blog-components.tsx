@@ -78,11 +78,8 @@ export function ImageFigure({ src, alt, caption, width, height }: ImageFigurePro
   if (!isAllowedPublicMediaSource(src)) {
     return (
       <p className="rounded-xl border border-destructive/60 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-        ImageFigure does not allow relative asset paths. Use a public path such as
-        {" "}
-        <code>/generated/posts/...</code>
-        {" "}
-        or an absolute URL.
+        ImageFigure does not allow relative asset paths. Use a root-relative public path or an
+        absolute URL.
       </p>
     );
   }

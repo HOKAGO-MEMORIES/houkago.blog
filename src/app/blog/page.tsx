@@ -22,13 +22,13 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: `Blog | ${SITE_NAME}`,
-  description: "houkago.posts를 읽고 검증한 정적 포스트 허브입니다.",
+  description: "Backend에서 동기화된 공개 글을 탐색하는 포스트 허브입니다.",
   alternates: {
     canonical: "/blog",
   },
   openGraph: {
     title: `Blog | ${SITE_NAME}`,
-    description: "houkago.posts를 읽고 검증한 정적 포스트 허브입니다.",
+    description: "Backend에서 동기화된 공개 글을 탐색하는 포스트 허브입니다.",
     url: "/blog",
     siteName: SITE_NAME,
     images: [
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: `Blog | ${SITE_NAME}`,
-    description: "houkago.posts를 읽고 검증한 정적 포스트 허브입니다.",
+    description: "Backend에서 동기화된 공개 글을 탐색하는 포스트 허브입니다.",
     images: [DEFAULT_OG_IMAGE],
   },
 };
