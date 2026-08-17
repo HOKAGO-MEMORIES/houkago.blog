@@ -122,6 +122,43 @@ describe("backend post API success and contract parsing", () => {
     );
   });
 
+  it("encodes a Unicode tag with page, size, and cache contract", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({ page: 1, size: 25, tag: "그래프 탐색" });
+
+    const call = readFetchCall(fetchMock);
+    expect(call.url).toBe(
+      "https://example.test/api/posts?page=1&size=25&tag=%EA%B7%B8%EB%9E%98%ED%94%84+%ED%83%90%EC%83%89",
+    );
+    expect(call.init?.next?.revalidate).toBe(DEFAULT_POST_REVALIDATE_SECONDS);
+    expect(call.init?.next?.tags).toEqual([BACKEND_POSTS_CACHE_TAG]);
+  });
+
+  it("serializes tag, category, and featured filters together", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({
+      page: 0,
+      size: 3,
+      featured: true,
+      category: "project",
+      tag: "spring",
+    });
+
+    expect(readFetchCall(fetchMock).url).toBe(
+      "https://example.test/api/posts?page=0&size=3&featured=true&category=project&tag=spring",
+    );
+  });
+
   it("encodes detail slugs and preserves raw body", async () => {
     const fetchMock = createFetchMock(jsonResponse(backendPostDetailFixture));
     const client = createBackendPostApiClient({
@@ -303,6 +340,17 @@ describe("backend post API errors", () => {
 
     await expect(
       client.fetchPostPage({ page: 0, size: 3, category: "   " }),
+    ).rejects.toBeInstanceOf(BackendPostInputError);
+  });
+
+  it("rejects a blank tag filter", async () => {
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: createFetchMock(jsonResponse(backendPostPageFixture)),
+    });
+
+    await expect(
+      client.fetchPostPage({ page: 0, size: 3, tag: "   " }),
     ).rejects.toBeInstanceOf(BackendPostInputError);
   });
 });

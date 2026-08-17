@@ -37,6 +37,7 @@ export type FetchPostPageInput = {
   readonly size: number;
   readonly featured?: boolean;
   readonly category?: string;
+  readonly tag?: string;
 };
 
 export type BackendPostApiClient = {
@@ -117,6 +118,7 @@ export function createBackendPostApiClient({
       validateBackendPage(input.page);
       validatePageSize(input.size);
       validateCategory(input.category);
+      validateTag(input.tag);
 
       const endpoint = "/api/posts";
       const url = new URL("api/posts", normalizedBaseUrl);
@@ -129,6 +131,9 @@ export function createBackendPostApiClient({
       }
       if (input.category !== undefined) {
         searchParams.set("category", input.category);
+      }
+      if (input.tag !== undefined) {
+        searchParams.set("tag", input.tag);
       }
       url.search = searchParams.toString();
 
@@ -402,6 +407,12 @@ function validatePageSize(size: number) {
 function validateCategory(category: string | undefined) {
   if (category !== undefined && !category.trim()) {
     throw new BackendPostInputError("Category must not be blank when provided.");
+  }
+}
+
+function validateTag(tag: string | undefined) {
+  if (tag !== undefined && !tag.trim()) {
+    throw new BackendPostInputError("Tag must not be blank when provided.");
   }
 }
 
