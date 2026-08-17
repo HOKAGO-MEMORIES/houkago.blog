@@ -9,6 +9,7 @@ import {
   BackendPostInputError,
   BackendPostInvalidJsonError,
   DEFAULT_POST_REVALIDATE_SECONDS,
+  MAX_POST_SEARCH_QUERY_LENGTH,
   type BackendPostRequestOptions,
   createBackendPostApiClient,
   fetchPostPage,
@@ -156,6 +157,44 @@ describe("backend post API success and contract parsing", () => {
 
     expect(readFetchCall(fetchMock).url).toBe(
       "https://example.test/api/posts?page=0&size=3&featured=true&category=project&tag=spring",
+    );
+  });
+
+  it("trims and encodes a Unicode search query with no-store by default", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({ page: 0, size: 25, q: "  최단 경로  " });
+
+    const call = readFetchCall(fetchMock);
+    expect(call.url).toBe(
+      "https://example.test/api/posts?page=0&size=25&q=%EC%B5%9C%EB%8B%A8+%EA%B2%BD%EB%A1%9C",
+    );
+    expect(call.init?.cache).toBe("no-store");
+    expect(call.init?.next).toBeUndefined();
+  });
+
+  it("serializes q with category, tag, featured, page, and size", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({
+      page: 1,
+      size: 25,
+      featured: true,
+      category: "project",
+      tag: "backend",
+      q: "spring boot",
+    });
+
+    expect(readFetchCall(fetchMock).url).toBe(
+      "https://example.test/api/posts?page=1&size=25&featured=true&category=project&tag=backend&q=spring+boot",
     );
   });
 
@@ -352,6 +391,26 @@ describe("backend post API errors", () => {
     await expect(
       client.fetchPostPage({ page: 0, size: 3, tag: "   " }),
     ).rejects.toBeInstanceOf(BackendPostInputError);
+  });
+
+  it("rejects blank and overlong search queries", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await expect(
+      client.fetchPostPage({ page: 0, size: 3, q: "   " }),
+    ).rejects.toBeInstanceOf(BackendPostInputError);
+    await expect(
+      client.fetchPostPage({
+        page: 0,
+        size: 3,
+        q: "x".repeat(MAX_POST_SEARCH_QUERY_LENGTH + 1),
+      }),
+    ).rejects.toBeInstanceOf(BackendPostInputError);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

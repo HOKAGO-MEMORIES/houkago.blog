@@ -13,6 +13,7 @@ const API_BASE_URL_ENV = "HOUKAGO_API_BASE_URL";
 const MAX_PAGE_SIZE = 50;
 
 export const DEFAULT_POST_REVALIDATE_SECONDS = 300;
+export const MAX_POST_SEARCH_QUERY_LENGTH = 100;
 
 type NextFetchRequestInit = RequestInit & {
   next?: {
@@ -38,6 +39,7 @@ export type FetchPostPageInput = {
   readonly featured?: boolean;
   readonly category?: string;
   readonly tag?: string;
+  readonly q?: string;
 };
 
 export type BackendPostApiClient = {
@@ -119,6 +121,7 @@ export function createBackendPostApiClient({
       validatePageSize(input.size);
       validateCategory(input.category);
       validateTag(input.tag);
+      const searchQuery = normalizeSearchQuery(input.q);
 
       const endpoint = "/api/posts";
       const url = new URL("api/posts", normalizedBaseUrl);
@@ -135,9 +138,15 @@ export function createBackendPostApiClient({
       if (input.tag !== undefined) {
         searchParams.set("tag", input.tag);
       }
+      if (searchQuery !== undefined) {
+        searchParams.set("q", searchQuery);
+      }
       url.search = searchParams.toString();
 
-      const response = await request(fetchImpl, url, endpoint, options);
+      const requestOptions = searchQuery !== undefined && options === undefined
+        ? { cache: "no-store" as const }
+        : options;
+      const response = await request(fetchImpl, url, endpoint, requestOptions);
       ensureSuccessfulResponse(response, endpoint);
       return parseBackendPostPage(await parseJson(response, endpoint));
     },
@@ -414,6 +423,23 @@ function validateTag(tag: string | undefined) {
   if (tag !== undefined && !tag.trim()) {
     throw new BackendPostInputError("Tag must not be blank when provided.");
   }
+}
+
+function normalizeSearchQuery(query: string | undefined) {
+  if (query === undefined) {
+    return undefined;
+  }
+
+  const normalized = query.trim();
+  if (!normalized) {
+    throw new BackendPostInputError("Search query must not be blank when provided.");
+  }
+  if (normalized.length > MAX_POST_SEARCH_QUERY_LENGTH) {
+    throw new BackendPostInputError(
+      `Search query must not exceed ${MAX_POST_SEARCH_QUERY_LENGTH} characters.`,
+    );
+  }
+  return normalized;
 }
 
 function validateSlug(slug: string) {
