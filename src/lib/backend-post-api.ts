@@ -36,6 +36,7 @@ export type FetchPostPageInput = {
   readonly page: number;
   readonly size: number;
   readonly featured?: boolean;
+  readonly category?: string;
 };
 
 export type BackendPostApiClient = {
@@ -115,6 +116,7 @@ export function createBackendPostApiClient({
     async fetchPostPage(input, options) {
       validateBackendPage(input.page);
       validatePageSize(input.size);
+      validateCategory(input.category);
 
       const endpoint = "/api/posts";
       const url = new URL("api/posts", normalizedBaseUrl);
@@ -124,6 +126,9 @@ export function createBackendPostApiClient({
       });
       if (input.featured !== undefined) {
         searchParams.set("featured", String(input.featured));
+      }
+      if (input.category !== undefined) {
+        searchParams.set("category", input.category);
       }
       url.search = searchParams.toString();
 
@@ -391,6 +396,12 @@ function validateBackendPage(page: number) {
 function validatePageSize(size: number) {
   if (!Number.isInteger(size) || size < 1 || size > MAX_PAGE_SIZE) {
     throw new BackendPostInputError(`Page size must be an integer between 1 and ${MAX_PAGE_SIZE}.`);
+  }
+}
+
+function validateCategory(category: string | undefined) {
+  if (category !== undefined && !category.trim()) {
+    throw new BackendPostInputError("Category must not be blank when provided.");
   }
 }
 

@@ -86,6 +86,42 @@ describe("backend post API success and contract parsing", () => {
     ]);
   });
 
+  it("encodes the optional category filter with page, size, and cache tag", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({ page: 1, size: 25, category: "project notes" });
+
+    const call = readFetchCall(fetchMock);
+    expect(call.url).toBe(
+      "https://example.test/api/posts?page=1&size=25&category=project+notes",
+    );
+    expect(call.init?.next?.revalidate).toBe(DEFAULT_POST_REVALIDATE_SECONDS);
+    expect(call.init?.next?.tags).toEqual([BACKEND_POSTS_CACHE_TAG]);
+  });
+
+  it("serializes category and featured filters together", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({
+      page: 0,
+      size: 3,
+      featured: true,
+      category: "algorithm",
+    });
+
+    expect(readFetchCall(fetchMock).url).toBe(
+      "https://example.test/api/posts?page=0&size=3&featured=true&category=algorithm",
+    );
+  });
+
   it("encodes detail slugs and preserves raw body", async () => {
     const fetchMock = createFetchMock(jsonResponse(backendPostDetailFixture));
     const client = createBackendPostApiClient({
@@ -257,6 +293,17 @@ describe("backend post API errors", () => {
     });
 
     await expect(client.fetchPostDetail("   ")).rejects.toBeInstanceOf(BackendPostInputError);
+  });
+
+  it("rejects a blank category filter", async () => {
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: createFetchMock(jsonResponse(backendPostPageFixture)),
+    });
+
+    await expect(
+      client.fetchPostPage({ page: 0, size: 3, category: "   " }),
+    ).rejects.toBeInstanceOf(BackendPostInputError);
   });
 });
 
