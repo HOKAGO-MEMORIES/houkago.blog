@@ -151,6 +151,51 @@ describe("HomePanelNavigator", () => {
     expect(footer.inert).toBe(false);
     expect(footer.hasAttribute("aria-hidden")).toBe(false);
   });
+
+  it("rounds fractional remaining scroll distance without widening the footer edge", () => {
+    reducedMotion = true;
+    const { container } = renderNavigator({ withFooter: true });
+    const footer = screen.getByTestId("footer");
+    const panels = container.querySelectorAll<HTMLElement>("[data-home-panel-index]");
+    const finalPanel = panels[2];
+    const finalContent = finalPanel.querySelector<HTMLElement>("[data-home-snap-section]")!;
+    defineScrollMetrics(finalPanel, { clientHeight: 720, scrollHeight: 1102 });
+    defineScrollMetrics(finalContent, { clientHeight: 900, scrollHeight: 900 });
+    vi.spyOn(footer, "getBoundingClientRect").mockReturnValue({
+      width: 320,
+      height: 150,
+      top: 570,
+      right: 320,
+      bottom: 720,
+      left: 0,
+      x: 0,
+      y: 570,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.keyDown(window, { key: "End" });
+    finalPanel.scrollTop = 356.9;
+    fireEvent.scroll(finalPanel);
+
+    expect(document.body.classList.contains("home-panel-footer-visible")).toBe(false);
+    expect(footer.inert).toBe(true);
+    expect(footer.getAttribute("aria-hidden")).toBe("true");
+
+    finalPanel.scrollTop = 357.5;
+    fireEvent.scroll(finalPanel);
+
+    expect(document.body.classList.contains("home-panel-footer-visible")).toBe(true);
+    expect(footer.inert).toBe(false);
+    expect(footer.hasAttribute("aria-hidden")).toBe(false);
+    expect(window.scrollY).toBe(0);
+
+    finalPanel.scrollTop = 332.5;
+    fireEvent.scroll(finalPanel);
+
+    expect(document.body.classList.contains("home-panel-footer-visible")).toBe(false);
+    expect(footer.inert).toBe(true);
+    expect(footer.getAttribute("aria-hidden")).toBe("true");
+  });
 });
 
 function renderNavigator({ withFooter = false }: { withFooter?: boolean } = {}) {

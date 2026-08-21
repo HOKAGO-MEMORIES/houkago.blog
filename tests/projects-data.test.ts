@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   archiveProjects,
   featuredProjects,
+  getProjectDisplayCategory,
   projects,
   projectGroups,
 } from "@/data/projects";
@@ -48,5 +49,21 @@ describe("project source of truth", () => {
       "discord-gacha-bot",
       "legacy-github-blog",
     ]);
+  });
+
+  it("keeps source categories while simplifying featured display labels", () => {
+    expect(featuredProjects.map((project) => project.category)).toEqual([
+      "웹 / 백엔드",
+      "웹 / 프론트엔드",
+      "알고리즘",
+    ]);
+    expect(featuredProjects.map(getProjectDisplayCategory)).toEqual([
+      "웹",
+      "웹",
+      "알고리즘",
+    ]);
+    expect(archiveProjects.map(getProjectDisplayCategory)).toEqual(
+      archiveProjects.map((project) => project.category),
+    );
   });
 });

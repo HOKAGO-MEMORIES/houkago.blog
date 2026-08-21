@@ -3,17 +3,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import AfterSchoolClock from "@/app/components/after-school-clock";
 import HomePanelNavigator from "@/app/components/home-panel-navigator";
-import { featuredProjects } from "@/data/projects";
+import { featuredProjects, getProjectDisplayCategory } from "@/data/projects";
 import { loadBackendPostPage } from "@/lib/backend-post-page-loader";
 import { getPostRoute } from "@/lib/post-navigation";
 
 export const revalidate = 300;
-
-const homeProjectCategories: Readonly<Record<string, string>> = {
-  "houkago-server": "웹",
-  "houkago-blog": "웹",
-  "boj-line123": "알고리즘",
-};
 
 export default async function Home() {
   await connection();
@@ -83,7 +77,7 @@ export default async function Home() {
                 <p>{project.description}</p>
               </div>
               <span className="home-project-category">
-                {homeProjectCategories[project.id] ?? project.category}
+                {getProjectDisplayCategory(project)}
               </span>
               <ArrowUpRight
                 className="h-4 w-4 justify-self-end transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-focus-visible:translate-x-0.5 group-focus-visible:-translate-y-0.5"

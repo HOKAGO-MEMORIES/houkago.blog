@@ -69,3 +69,13 @@ export const featuredProjects: readonly Project[] = projects.filter(
 export const archiveProjects: readonly Project[] = projects.filter(
   (project) => project.group === "archive",
 );
+
+const featuredProjectCategoryLabels: Readonly<Record<string, string>> = {
+  "houkago-server": "웹",
+  "houkago-blog": "웹",
+  "boj-line123": "알고리즘",
+};
+
+export function getProjectDisplayCategory(project: Project) {
+  return featuredProjectCategoryLabels[project.id] ?? project.category;
+}

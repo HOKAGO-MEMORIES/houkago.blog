@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import {
   archiveProjects,
   featuredProjects,
+  getProjectDisplayCategory,
   type Project,
 } from "@/data/projects";
 
@@ -27,7 +28,7 @@ function ProjectRow({
       </span>
       <div className="project-index-title">
         <h3>{project.title}</h3>
-        <span>{project.category}</span>
+        <span>{getProjectDisplayCategory(project)}</span>
       </div>
       <p>{project.description}</p>
       <span className="project-index-action">

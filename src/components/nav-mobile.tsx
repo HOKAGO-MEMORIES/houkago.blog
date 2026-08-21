@@ -16,7 +16,7 @@ export default function NavMobile() {
           type="button"
           variant="ghost"
           title="메뉴"
-          className="hidden h-11 rounded-full px-2 text-[13px] font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground max-[760px]:inline-flex max-[420px]:px-1.5 max-[420px]:text-xs"
+          className="hidden h-11 min-w-11 rounded-full px-2 text-[13px] font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground max-[760px]:inline-flex max-[420px]:px-1.5 max-[420px]:text-xs"
         >
           <span>{open ? "닫기" : "메뉴"}</span>
         </Button>

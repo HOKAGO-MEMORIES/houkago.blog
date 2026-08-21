@@ -23,6 +23,10 @@ const SCROLL_EDGE_EPSILON = 2;
 const FOOTER_EDGE_EPSILON = 24;
 const FOOTER_HIDE_DISTANCE = 24;
 
+function normalizeRemainingScrollDistance(distance: number) {
+  return Math.max(0, Math.floor(distance + Number.EPSILON));
+}
+
 function isInteractiveTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(
@@ -116,7 +120,8 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
       }
 
       const distanceFromEnd = Math.max(0, maxPanelScroll(panel) - panel.scrollTop);
-      if (!footerVisible && distanceFromEnd <= FOOTER_EDGE_EPSILON) {
+      const normalizedDistanceFromEnd = normalizeRemainingScrollDistance(distanceFromEnd);
+      if (!footerVisible && normalizedDistanceFromEnd <= FOOTER_EDGE_EPSILON) {
         setFooterVisibility(true, panel.scrollTop);
       } else if (
         footerVisible &&
