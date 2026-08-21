@@ -26,9 +26,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <GoogleAnalytics />
-          <div className="mx-auto flex min-h-screen w-full max-w-screen-md min-w-[320px] flex-col">
+          <div className="flex min-h-screen w-full min-w-[320px] flex-col">
             <Header />
-            <main className="flex flex-1 flex-col">
+            <main className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
               {children}
             </main>
             <Footer />

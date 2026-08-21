@@ -74,9 +74,10 @@ export default function SearchDialog() {
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-none shadow-none text-primary hover:bg-transparent hover:text-foreground"
+          title="검색"
+          className="h-11 w-11 rounded-full text-muted-foreground shadow-none hover:bg-muted hover:text-foreground"
         >
-          <Search className="h-5 w-5 transition-colors" strokeWidth={2.25} />
+          <Search className="h-[18px] w-[18px] transition-colors" strokeWidth={2} />
           <span className="sr-only">Open search</span>
         </Button>
       </Dialog.Trigger>
@@ -97,7 +98,7 @@ export default function SearchDialog() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-none text-primary hover:bg-transparent hover:text-foreground"
+                className="h-11 w-11 rounded-full text-primary hover:bg-muted hover:text-foreground"
               >
                 <X className="h-5 w-5" strokeWidth={2.25} />
                 <span className="sr-only">Close search</span>

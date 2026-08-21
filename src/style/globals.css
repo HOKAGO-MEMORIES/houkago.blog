@@ -125,3 +125,9 @@
     font-weight: 400 !important;
   }
 }
+
+@media (max-width: 760px) {
+  :root {
+    --header-height: 4.125rem;
+  }
+}

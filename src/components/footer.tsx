@@ -1,19 +1,29 @@
 import { getTzDay } from "@/util/days";
-import GithubIcon from '@/components/icons/GithubIcon';
-import Link from "next/link"
+import Link from "next/link";
 
 export default function Footer() {
-    return (
-        <footer className="flex flex-col items-center justify-center w-full h-28 gap-3">
-            <div className="flex items-center justify-center gap-3">
-                <Link href="https://github.com/HOKAGO-MEMORIES" target="_blank">
-                    <GithubIcon size={20} className="text-primary stroke-1"/>
-                </Link>
-
-            </div>
-            <span className="text-xs text-primary font-medium">
-				Copyright © {getTzDay(new Date()).get("year")} HOKAGO-MEMORIES
-			</span>
-        </footer>
-    );
+  return (
+    <footer className="w-full border-t border-[oklch(var(--border-strong))]">
+      <div className="mx-auto flex min-h-40 w-full max-w-[var(--wide-content-width)] items-center justify-between gap-9 px-[var(--layout-gutter)] py-9 max-[760px]:min-h-44 max-[760px]:flex-col max-[760px]:items-start max-[760px]:justify-center max-[760px]:gap-6">
+        <p className="text-xl font-medium text-foreground max-[760px]:text-lg">
+          방과 후에도 만들고, 풀고, 기록합니다.
+        </p>
+        <div className="font-technical flex items-center gap-7 text-[10px] tracking-[0.06em] text-muted-foreground max-[420px]:w-full max-[420px]:items-start max-[420px]:justify-between max-[420px]:gap-4">
+          <Link
+            href="https://github.com/HOKAGO-MEMORIES"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex min-h-11 items-center text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="border-b border-[oklch(var(--border-strong))] pb-1 transition-colors group-hover:border-primary group-focus-visible:border-primary">
+              GitHub ↗
+            </span>
+          </Link>
+          <span className="inline-flex min-h-11 items-center whitespace-nowrap">
+            © {getTzDay(new Date()).get("year")} HOKAGO-MEMORIES
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
 }
