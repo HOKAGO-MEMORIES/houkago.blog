@@ -18,6 +18,23 @@ import {
 } from "./fixtures/backend-post";
 
 describe("backend post page loader", () => {
+  it("loads the Home recent posts as backend page 0 with exactly three items", async () => {
+    const fetchPage = vi
+      .fn<BackendPostPageFetcher>()
+      .mockResolvedValue(backendPostPageFixture);
+
+    await loadBackendPostPage({
+      frontendPage: 1,
+      pageSize: 3,
+      fetchPage,
+    });
+
+    expect(fetchPage).toHaveBeenCalledWith(
+      { page: 0, size: 3 },
+      { revalidate: 300 },
+    );
+  });
+
   it("loads the blog main first page as backend page 0", async () => {
     const fetchPage = vi
       .fn<BackendPostPageFetcher>()

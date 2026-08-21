@@ -124,6 +124,375 @@
   .prose :not(pre) > code {
     font-weight: 400 !important;
   }
+
+  .home-panel-stage {
+    position: relative;
+    width: min(100vw, var(--wide-content-width));
+    margin-left: calc(
+      (100% - min(100vw, var(--wide-content-width))) / 2
+    );
+  }
+
+  .home-panel-track {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .home-panel-frame {
+    min-width: 0;
+    scroll-margin-top: var(--header-height);
+    scroll-snap-align: start;
+  }
+
+  .home-panel-section {
+    width: 100%;
+    min-height: calc(100svh - var(--header-height));
+    padding: 5.5rem var(--layout-gutter) 6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .home-ruled-section {
+    border-top: 1px solid oklch(var(--border-strong));
+  }
+
+  .home-section-heading {
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .home-section-link {
+    width: 12rem;
+    min-height: 3rem;
+    padding-inline: 0.125rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    border-bottom: 1px solid oklch(var(--border-strong));
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: padding 160ms ease, background-color 160ms ease;
+  }
+
+  .home-section-link:hover,
+  .home-section-link:focus-visible {
+    padding-inline: 0.75rem;
+    background: color-mix(in oklch, oklch(var(--primary)) 14%, transparent);
+    outline: none;
+  }
+
+  .home-project-row {
+    min-height: 8rem;
+    padding: 1.5rem 0.25rem;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) minmax(7rem, auto) 2rem;
+    align-items: center;
+    gap: 1.25rem;
+    border-bottom: 1px solid oklch(var(--border));
+    transition: padding 180ms ease, background-color 180ms ease;
+  }
+
+  .home-project-row:hover,
+  .home-project-row:focus-visible {
+    padding-inline: 1rem;
+    background: oklch(var(--surface));
+    outline: none;
+  }
+
+  .home-project-row:focus-visible,
+  .home-note-lead:focus-visible,
+  .home-note-secondary:focus-visible,
+  .home-panel-nav-button:focus-visible {
+    box-shadow: inset 0 0 0 2px oklch(var(--ring));
+  }
+
+  .home-notes-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.9fr);
+    border-block: 1px solid oklch(var(--border-strong));
+  }
+
+  .home-note-lead {
+    min-height: 19rem;
+    padding: 1.75rem 2.25rem 1.75rem 0.25rem;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid oklch(var(--border-strong));
+    transition: padding 180ms ease, background-color 180ms ease;
+  }
+
+  .home-note-lead:hover,
+  .home-note-lead:focus-visible {
+    padding-left: 1.25rem;
+    background: oklch(var(--surface));
+    outline: none;
+  }
+
+  .home-note-secondary {
+    position: relative;
+    min-height: 9.5rem;
+    padding: 1.25rem 3rem 1.25rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid oklch(var(--border));
+    transition: padding 180ms ease, background-color 180ms ease;
+  }
+
+  .home-note-secondary:last-child {
+    border-bottom: 0;
+  }
+
+  .home-note-secondary:hover,
+  .home-note-secondary:focus-visible {
+    padding-left: 2.25rem;
+    background: oklch(var(--surface));
+    outline: none;
+  }
+
+  .home-note-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: oklch(var(--muted-foreground));
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .home-note-meta > span {
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .home-panel-nav {
+    position: fixed;
+    top: calc(var(--header-height) + 0.5rem);
+    right: var(--layout-gutter);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+  }
+
+  .home-panel-nav-button {
+    position: relative;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: oklch(var(--muted-foreground));
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    transition: color 160ms ease;
+  }
+
+  .home-panel-nav-button::after {
+    position: absolute;
+    right: 0.25rem;
+    bottom: 0.375rem;
+    left: 0.25rem;
+    height: 1px;
+    background: oklch(var(--border-strong));
+    content: "";
+  }
+
+  .home-panel-nav-button[aria-current="step"] {
+    color: oklch(var(--foreground));
+  }
+
+  .home-panel-nav-button[aria-current="step"]::after {
+    height: 2px;
+    background: oklch(var(--primary));
+  }
+}
+
+@media (min-width: 761px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body.home-panel-enhanced {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  body.home-panel-enhanced .home-panel-stage {
+    height: calc(100dvh - var(--header-height));
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  body.home-panel-enhanced .home-panel-track {
+    height: 100%;
+    transform: translate3d(
+      0,
+      calc(var(--home-panel-index) * -100%),
+      0
+    );
+    transition: transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  body.home-panel-enhanced .home-panel-frame {
+    height: 100%;
+    flex: 0 0 100%;
+    overflow-x: clip;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  body.home-panel-enhanced .home-panel-section {
+    min-height: 100%;
+  }
+
+  body.home-panel-enhanced .home-recent-section {
+    padding-bottom: calc(var(--home-footer-height, 10rem) + 2rem);
+  }
+
+  body.home-panel-enhanced [data-site-footer] {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(0, 100%, 0);
+    background: color-mix(in oklch, oklch(var(--background)) 94%, transparent);
+    backdrop-filter: blur(18px) saturate(120%);
+    transition:
+      opacity 440ms ease,
+      transform 620ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 620ms;
+  }
+
+  body.home-panel-enhanced.home-panel-at-end [data-site-footer] {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
+    transition-delay: 0s;
+  }
+
+  body.home-panel-enhanced .home-panel-nav {
+    position: absolute;
+    top: 50%;
+    right: max(0.25rem, calc(var(--layout-gutter) * 0.35));
+    flex-direction: column;
+    transform: translateY(-50%);
+  }
+}
+
+@media (max-width: 760px) {
+  .home-panel-section {
+    min-height: calc(100svh - var(--header-height));
+    padding-block: 5rem;
+  }
+
+  .home-section-heading {
+    margin-bottom: 2rem;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .home-section-link {
+    width: 10.5rem;
+    align-self: flex-end;
+  }
+
+  .home-project-row {
+    min-height: 9.5rem;
+    grid-template-columns: 1.5rem minmax(0, 1fr) 2.75rem;
+    align-items: start;
+    gap: 0.875rem;
+  }
+
+  .home-project-row > :nth-child(3) {
+    grid-column: 2 / 4;
+    justify-self: start;
+  }
+
+  .home-project-row > :last-child {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.875rem;
+  }
+
+  .home-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-note-lead {
+    min-height: 18rem;
+    padding-inline: 0.25rem;
+    border-right: 0;
+    border-bottom: 1px solid oklch(var(--border-strong));
+  }
+
+  .home-note-secondary {
+    padding-left: 0.25rem;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 760px) {
+  .home-panel-section {
+    padding-block: 2.5rem;
+  }
+
+  .home-intro h1 {
+    font-size: 4.5rem;
+  }
+
+  .home-intro > :last-child {
+    margin-top: 2.5rem;
+  }
+
+  .home-section-heading {
+    margin-bottom: 1.5rem;
+  }
+
+  .home-project-row {
+    min-height: 6rem;
+    padding-block: 1rem;
+  }
+
+  .home-note-lead {
+    min-height: 14rem;
+    padding-block: 1.25rem;
+  }
+
+  .home-note-lead h3 {
+    margin-top: 1.5rem;
+    font-size: 2rem;
+  }
+
+  .home-note-secondary {
+    min-height: 7rem;
+    padding-block: 0.875rem;
+  }
+
+  .home-note-secondary h3 {
+    margin-top: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-panel-track,
+  .home-panel-nav-button,
+  .home-project-row,
+  .home-note-lead,
+  .home-note-secondary,
+  .home-section-link {
+    transition: none !important;
+  }
 }
 
 @media (max-width: 760px) {

@@ -3,7 +3,10 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="w-full border-t border-[oklch(var(--border-strong))]">
+    <footer
+      data-site-footer
+      className="w-full border-t border-[oklch(var(--border-strong))]"
+    >
       <div className="mx-auto flex min-h-40 w-full max-w-[var(--wide-content-width)] items-center justify-between gap-9 px-[var(--layout-gutter)] py-9 max-[760px]:min-h-44 max-[760px]:flex-col max-[760px]:items-start max-[760px]:justify-center max-[760px]:gap-6">
         <p className="text-xl font-medium text-foreground max-[760px]:text-lg">
           방과 후에도 만들고, 풀고, 기록합니다.
