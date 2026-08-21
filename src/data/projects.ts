@@ -13,20 +13,20 @@ export type Project = Readonly<{
 
 export const projects = [
   {
-    id: "houkago-blog",
-    title: "houkago.blog",
-    description: "지금 보고 있는 방과후 블로그의 프론트엔드입니다.",
-    category: "웹 / 프론트엔드",
-    group: "featured",
-    href: "https://github.com/HOKAGO-MEMORIES/houkago.blog",
-  },
-  {
     id: "houkago-server",
     title: "houkago.server",
     description: "블로그의 콘텐츠 동기화와 공개 API를 담당하는 백엔드입니다.",
     category: "웹 / 백엔드",
     group: "featured",
     href: "https://github.com/HOKAGO-MEMORIES/houkago.server",
+  },
+  {
+    id: "houkago-blog",
+    title: "houkago.blog",
+    description: "지금 보고 있는 방과후 블로그의 프론트엔드입니다.",
+    category: "웹 / 프론트엔드",
+    group: "featured",
+    href: "https://github.com/HOKAGO-MEMORIES/houkago.blog",
   },
   {
     id: "boj-line123",

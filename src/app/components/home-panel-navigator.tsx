@@ -1,192 +1,241 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  Children,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
-const PANEL_LABELS = ["Intro", "Featured Projects", "Recent Posts"] as const;
-const WHEEL_THRESHOLD = 36;
-const GESTURE_RESET_GAP = 180;
-const PANEL_TRANSITION_DURATION = 760;
-const PANEL_SCROLL_EPSILON = 2;
+type HomePanelNavigatorProps = { children: ReactNode };
+type PanelTransition = { from: number; to: number; direction: -1 | 1 };
+
+const WHEEL_THRESHOLD = 28;
+const SWIPE_THRESHOLD = 56;
+const PANEL_MOTION_DURATION = 920;
+const NEW_GESTURE_GAP = 120;
+const REACCELERATION_RATIO = 1.6;
+const DECAY_RATIO = 0.55;
+const MIN_RESTART_DELTA = 18;
+const SCROLL_EDGE_EPSILON = 2;
+const FOOTER_EDGE_EPSILON = 24;
+const FOOTER_HIDE_DISTANCE = 24;
 
 function isInteractiveTarget(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    Boolean(
-      target.closest(
-        'a, button, input, textarea, select, summary, [contenteditable="true"], [role="slider"]',
-      ),
-    )
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest(
+      'input, textarea, select, button, [contenteditable="true"], [role="slider"]',
+    ),
   );
 }
 
-function isPanelNavigatorTarget(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    Boolean(target.closest(".home-panel-nav"))
-  );
-}
-
-function preservesNativeWheel(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    Boolean(
-      target.closest(
-        'input, textarea, select, [contenteditable="true"], [role="slider"], [data-home-native-wheel]',
-      ),
-    )
-  );
-}
-
-function canScrollPanel(panel: HTMLElement, direction: -1 | 1) {
-  const maxScroll = Math.max(0, panel.scrollHeight - panel.clientHeight);
-  return direction > 0
-    ? panel.scrollTop < maxScroll - PANEL_SCROLL_EPSILON
-    : panel.scrollTop > PANEL_SCROLL_EPSILON;
-}
-
-export default function HomePanelNavigator() {
-  const controllerRef = useRef<HTMLElement>(null);
-  const navigateRef = useRef<(index: number) => void>(() => undefined);
-  const activeIndexRef = useRef(0);
+export default function HomePanelNavigator({ children }: HomePanelNavigatorProps) {
+  const panels = Children.toArray(children);
+  const panelCount = panels.length;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [transition, setTransition] = useState<PanelTransition | null>(null);
+  const activeIndexRef = useRef(0);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const progressPercent = Math.floor(((activeIndex + 1) / panelCount) * 100000) / 1000;
+  const progressStyle = {
+    "--home-panel-progress": `${progressPercent}%`,
+    "--home-panel-number-position": `calc(${progressPercent}% - var(--home-panel-number-inset))`,
+  } as CSSProperties;
 
   useEffect(() => {
-    const stage = controllerRef.current?.closest<HTMLElement>(
-      ".home-panel-stage",
-    );
-    if (!stage) return;
+    const stageCandidate = stageRef.current;
+    if (!stageCandidate) return;
+    const stage: HTMLDivElement = stageCandidate;
 
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const panelElements = Array.from(
-      stage.querySelectorAll<HTMLElement>("[data-home-panel-frame]"),
+      stage.querySelectorAll<HTMLElement>("[data-home-panel-index]"),
     );
+    const panelContentElements = panelElements.map((panel) =>
+      panel.querySelector<HTMLElement>("[data-home-snap-section]"),
+    );
+    const header = document.querySelector<HTMLElement>("[data-site-header]");
     const footer = document.querySelector<HTMLElement>("[data-site-footer]");
-    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    let enhancedMode = false;
-    let lockedUntil = 0;
-    let transitionTimer: number | undefined;
     let accumulatedDelta = 0;
+    let accumulatedDirection: -1 | 0 | 1 = 0;
     let gestureConsumed = false;
-    let gestureDirection: -1 | 0 | 1 = 0;
     let lastWheelAt = 0;
-    let scrollFrame: number | undefined;
+    let lastAbsoluteDelta = 0;
+    let transitionUntil = 0;
+    let transitionPeakDelta = 0;
+    let transitionSawDecay = false;
+    let transitionTimer: number | undefined;
+    let sizeSyncFrame: number | undefined;
+    let touchStartY: number | undefined;
+    let touchStartScrollTop = 0;
+    let disposed = false;
+    let footerVisible = false;
+    let footerVisibilityInitialized = false;
+    let footerRevealScrollTop = 0;
 
-    const applyIndex = (index: number) => {
-      activeIndexRef.current = index;
-      setActiveIndex(index);
-      stage.dataset.activePanel = String(index + 1);
-      stage.style.setProperty("--home-panel-index", String(index));
-      panelElements.forEach((panel, panelIndex) => {
-        const inactive = enhancedMode && panelIndex !== index;
-        panel.dataset.panelState = panelIndex === index ? "active" : "inactive";
-        panel.inert = inactive;
-        if (inactive) panel.setAttribute("aria-hidden", "true");
-        else panel.removeAttribute("aria-hidden");
-      });
-      document.body.classList.toggle(
-        "home-panel-at-end",
-        enhancedMode && index === panelElements.length - 1,
-      );
-    };
+    const activePanel = () => panelElements[activeIndexRef.current];
+    const maxPanelScroll = (panel: HTMLElement) =>
+      Math.max(0, panel.scrollHeight - panel.clientHeight);
 
-    const resetGesture = (consumed = false) => {
-      accumulatedDelta = 0;
-      gestureDirection = 0;
-      gestureConsumed = consumed;
-    };
-
-    const goToPanel = (requestedIndex: number) => {
-      const nextIndex = Math.max(
-        0,
-        Math.min(panelElements.length - 1, requestedIndex),
-      );
-      if (nextIndex === activeIndexRef.current) return false;
-
-      if (enhancedMode) {
-        const now = performance.now();
-        if (now < lockedUntil) return false;
-
-        const direction: -1 | 1 =
-          nextIndex > activeIndexRef.current ? 1 : -1;
-        const incomingPanel = panelElements[nextIndex];
-        incomingPanel.scrollTop = direction > 0 ? 0 : incomingPanel.scrollHeight;
-
-        applyIndex(nextIndex);
-        lockedUntil = now + PANEL_TRANSITION_DURATION;
-        window.clearTimeout(transitionTimer);
-        transitionTimer = window.setTimeout(() => {
-          lockedUntil = 0;
-          resetGesture(true);
-        }, PANEL_TRANSITION_DURATION);
-        return true;
-      }
-
-      applyIndex(nextIndex);
-      panelElements[nextIndex]?.scrollIntoView({
-        behavior: reducedMotion.matches ? "auto" : "smooth",
-        block: "start",
-      });
-      return true;
-    };
-
-    navigateRef.current = goToPanel;
-
-    const syncFooterHeight = () => {
+    function setFooterVisibility(visible: boolean, revealScrollTop = 0) {
+      if (footerVisibilityInitialized && footerVisible === visible) return;
+      footerVisibilityInitialized = true;
+      footerVisible = visible;
+      footerRevealScrollTop = visible ? revealScrollTop : 0;
+      document.body.classList.toggle("home-panel-footer-visible", visible);
       if (!footer) return;
-      stage.style.setProperty(
-        "--home-footer-height",
-        `${Math.ceil(footer.getBoundingClientRect().height)}px`,
-      );
-    };
+      footer.inert = !visible;
+      if (visible) footer.removeAttribute("aria-hidden");
+      else footer.setAttribute("aria-hidden", "true");
+    }
 
-    const syncNativeActivePanel = () => {
-      if (enhancedMode || scrollFrame !== undefined) return;
-      scrollFrame = window.requestAnimationFrame(() => {
-        scrollFrame = undefined;
-        const headerOffset = Number.parseFloat(
-          getComputedStyle(document.documentElement).getPropertyValue(
-            "--header-height",
-          ),
-        );
-        let closestIndex = 0;
-        let closestDistance = Number.POSITIVE_INFINITY;
-
-        panelElements.forEach((panel, index) => {
-          const distance = Math.abs(panel.getBoundingClientRect().top - headerOffset);
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = index;
-          }
-        });
-
-        if (closestIndex !== activeIndexRef.current) applyIndex(closestIndex);
-      });
-    };
-
-    const syncMode = () => {
-      enhancedMode =
-        finePointer.matches &&
-        !reducedMotion.matches &&
-        window.innerWidth >= 761;
-      document.body.classList.toggle("home-panel-enhanced", enhancedMode);
-
-      if (enhancedMode) {
-        window.scrollTo({ top: 0, behavior: "auto" });
-        applyIndex(activeIndexRef.current);
-      } else {
-        document.body.classList.remove("home-panel-at-end");
-        syncNativeActivePanel();
-      }
-
-      syncFooterHeight();
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      if (!enhancedMode || event.ctrlKey || preservesNativeWheel(event.target)) {
+    function syncFooterVisibility() {
+      if (activeIndexRef.current !== panelCount - 1 || !footer) {
+        setFooterVisibility(false);
         return;
       }
 
+      const panel = panelElements[panelCount - 1];
+      const content = panelContentElements[panelCount - 1];
+      if (!panel || !content) {
+        setFooterVisibility(false);
+        return;
+      }
+
+      const footerHeight = footer.getBoundingClientRect().height;
+      const reservedFooterSpace = Number.parseFloat(getComputedStyle(content).paddingBottom) || 0;
+      const contentHeight = Math.max(0, content.scrollHeight - reservedFooterSpace);
+      const fits = contentHeight + footerHeight <= panel.clientHeight + SCROLL_EDGE_EPSILON;
+      if (fits) {
+        setFooterVisibility(true, panel.scrollTop);
+        return;
+      }
+
+      const distanceFromEnd = Math.max(0, maxPanelScroll(panel) - panel.scrollTop);
+      if (!footerVisible && distanceFromEnd <= FOOTER_EDGE_EPSILON) {
+        setFooterVisibility(true, panel.scrollTop);
+      } else if (
+        footerVisible &&
+        (footerRevealScrollTop - panel.scrollTop >= FOOTER_HIDE_DISTANCE ||
+          distanceFromEnd > FOOTER_EDGE_EPSILON + FOOTER_HIDE_DISTANCE)
+      ) {
+        setFooterVisibility(false);
+      }
+    }
+
+    function panelCanScroll(panel: HTMLElement, direction: -1 | 1) {
+      const maxScroll = maxPanelScroll(panel);
+      return direction > 0
+        ? panel.scrollTop < maxScroll - SCROLL_EDGE_EPSILON
+        : panel.scrollTop > SCROLL_EDGE_EPSILON;
+    }
+
+    function syncStageSize() {
+      const headerHeight = header?.getBoundingClientRect().height ?? 0;
+      stage.style.setProperty(
+        "--home-panel-stage-height",
+        `${Math.max(0, Math.floor(window.innerHeight - headerHeight))}px`,
+      );
+      const footerHeight = footer?.getBoundingClientRect().height ?? 0;
+      if (footerHeight > 0) {
+        stage.style.setProperty("--home-panel-footer-height", `${Math.ceil(footerHeight)}px`);
+      }
+
+      const panel = activePanel();
+      if (panel) {
+        const maxScroll = maxPanelScroll(panel);
+        if (maxScroll <= SCROLL_EDGE_EPSILON) panel.scrollTop = 0;
+        else if (panel.scrollTop > maxScroll) panel.scrollTop = maxScroll;
+      }
+      syncFooterVisibility();
+      if (window.scrollY !== 0) window.scrollTo({ top: 0, behavior: "auto" });
+    }
+
+    function scheduleSizeSync() {
+      if (disposed || sizeSyncFrame !== undefined) return;
+      sizeSyncFrame = window.requestAnimationFrame(() => {
+        sizeSyncFrame = undefined;
+        syncStageSize();
+      });
+    }
+
+    function syncAccessibility() {
+      const focused = document.activeElement;
+      panelElements.forEach((panel, index) => {
+        const inactive = index !== activeIndexRef.current;
+        panel.inert = inactive;
+        if (inactive) panel.setAttribute("aria-hidden", "true");
+        else panel.removeAttribute("aria-hidden");
+        if (inactive && focused instanceof HTMLElement && panel.contains(focused)) {
+          focused.blur();
+        }
+      });
+      document.body.classList.toggle(
+        "home-panel-at-end",
+        activeIndexRef.current === panelCount - 1,
+      );
+      syncFooterVisibility();
+    }
+
+    function resetWheelAccumulation(consumed = false) {
+      accumulatedDelta = 0;
+      accumulatedDirection = 0;
+      gestureConsumed = consumed;
+    }
+
+    function completeTransition() {
+      transitionUntil = 0;
+      resetWheelAccumulation(true);
+      setTransition(null);
+      scheduleSizeSync();
+    }
+
+    function goToPanel(nextIndex: number) {
+      if (performance.now() < transitionUntil) return false;
+      const boundedIndex = Math.max(0, Math.min(panelCount - 1, nextIndex));
+      const currentIndex = activeIndexRef.current;
+      if (boundedIndex === currentIndex) return false;
+
+      const direction: -1 | 1 = boundedIndex > currentIndex ? 1 : -1;
+      const incomingPanel = panelElements[boundedIndex];
+      if (incomingPanel) {
+        incomingPanel.scrollTop = direction > 0 ? 0 : maxPanelScroll(incomingPanel);
+      }
+      activeIndexRef.current = boundedIndex;
+      setActiveIndex(boundedIndex);
+      syncAccessibility();
+
+      window.clearTimeout(transitionTimer);
+      if (reducedMotionQuery.matches) {
+        transitionUntil = 0;
+        setTransition(null);
+        resetWheelAccumulation(true);
+        scheduleSizeSync();
+        return true;
+      }
+
+      setTransition({ from: currentIndex, to: boundedIndex, direction });
+      transitionUntil = performance.now() + PANEL_MOTION_DURATION;
+      transitionPeakDelta = lastAbsoluteDelta;
+      transitionSawDecay = false;
+      transitionTimer = window.setTimeout(completeTransition, PANEL_MOTION_DURATION);
+      return true;
+    }
+
+    function consumePanelScroll(panel: HTMLElement, delta: number) {
+      const direction: -1 | 1 = delta > 0 ? 1 : -1;
+      if (!panelCanScroll(panel, direction)) return false;
+      panel.scrollTop = Math.max(0, Math.min(maxPanelScroll(panel), panel.scrollTop + delta));
+      resetWheelAccumulation(true);
+      return true;
+    }
+
+    const onWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return;
       const deltaScale =
         event.deltaMode === WheelEvent.DOM_DELTA_LINE
           ? 16
@@ -195,140 +244,222 @@ export default function HomePanelNavigator() {
             : 1;
       const verticalDelta = event.deltaY * deltaScale;
       const horizontalDelta = event.deltaX * deltaScale;
-      if (
-        verticalDelta === 0 ||
-        Math.abs(horizontalDelta) > Math.abs(verticalDelta)
-      ) {
-        return;
-      }
-
-      const now = performance.now();
-      if (now < lockedUntil) {
-        event.preventDefault();
-        return;
-      }
-
-      const direction: -1 | 1 = verticalDelta > 0 ? 1 : -1;
-      const activePanel = panelElements[activeIndexRef.current];
-      if (activePanel && canScrollPanel(activePanel, direction)) {
-        resetGesture(true);
-        lastWheelAt = now;
-        return;
-      }
+      if (Math.abs(horizontalDelta) > Math.abs(verticalDelta) || verticalDelta === 0) return;
 
       event.preventDefault();
-      const newGesture = now - lastWheelAt > GESTURE_RESET_GAP;
-      lastWheelAt = now;
-      if (newGesture) resetGesture();
+      const now = performance.now();
+      const absoluteDelta = Math.abs(verticalDelta);
+      const deltaDirection: -1 | 1 = verticalDelta > 0 ? 1 : -1;
+      const wheelGap = lastWheelAt === 0 ? Number.POSITIVE_INFINITY : now - lastWheelAt;
+      const isReacceleration =
+        transitionSawDecay &&
+        absoluteDelta >= MIN_RESTART_DELTA &&
+        absoluteDelta >= lastAbsoluteDelta * REACCELERATION_RATIO;
 
-      if (gestureDirection !== 0 && gestureDirection !== direction) {
-        resetGesture();
+      if (now < transitionUntil) {
+        if (transitionPeakDelta > 0 && absoluteDelta <= transitionPeakDelta * DECAY_RATIO) {
+          transitionSawDecay = true;
+        }
+        transitionPeakDelta = Math.max(transitionPeakDelta, absoluteDelta);
+        lastWheelAt = now;
+        lastAbsoluteDelta = absoluteDelta;
+        return;
       }
-      gestureDirection = direction;
+
+      const panel = activePanel();
+      if (panel && consumePanelScroll(panel, verticalDelta)) {
+        lastWheelAt = now;
+        lastAbsoluteDelta = absoluteDelta;
+        return;
+      }
+
+      const startsNewGesture = wheelGap > NEW_GESTURE_GAP || isReacceleration;
+      lastWheelAt = now;
+      lastAbsoluteDelta = absoluteDelta;
+      if (startsNewGesture) {
+        resetWheelAccumulation();
+        accumulatedDirection = deltaDirection;
+      } else if (accumulatedDirection !== 0 && accumulatedDirection !== deltaDirection) {
+        resetWheelAccumulation();
+        accumulatedDirection = deltaDirection;
+      }
       if (gestureConsumed) return;
 
+      accumulatedDirection = deltaDirection;
       accumulatedDelta += verticalDelta;
       if (Math.abs(accumulatedDelta) < WHEEL_THRESHOLD) return;
-
-      gestureConsumed = true;
+      const direction = accumulatedDelta > 0 ? 1 : -1;
       accumulatedDelta = 0;
+      gestureConsumed = true;
       goToPanel(activeIndexRef.current + direction);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        isInteractiveTarget(event.target) &&
-        !isPanelNavigatorTarget(event.target)
-      ) {
-        return;
-      }
-
+      if (performance.now() < transitionUntil || isInteractiveTarget(event.target)) return;
       if (event.key === "Home" || event.key === "End") {
-        const targetIndex = event.key === "Home" ? 0 : panelElements.length - 1;
-        if (goToPanel(targetIndex)) event.preventDefault();
+        const target = event.key === "Home" ? 0 : panelCount - 1;
+        if (goToPanel(target)) event.preventDefault();
         return;
       }
 
       let direction: -1 | 1 | undefined;
-      if (event.key === "ArrowDown" || event.key === "PageDown") direction = 1;
-      if (event.key === "ArrowUp" || event.key === "PageUp") direction = -1;
+      if (
+        event.key === "ArrowDown" ||
+        event.key === "PageDown" ||
+        (event.key === " " && !event.shiftKey)
+      ) direction = 1;
+      else if (
+        event.key === "ArrowUp" ||
+        event.key === "PageUp" ||
+        (event.key === " " && event.shiftKey)
+      ) direction = -1;
       if (!direction) return;
 
-      if (enhancedMode) {
-        const activePanel = panelElements[activeIndexRef.current];
-        if (activePanel && canScrollPanel(activePanel, direction)) {
-          activePanel.scrollBy({
-            top: direction * Math.max(96, activePanel.clientHeight * 0.72),
-            behavior: "smooth",
-          });
-          event.preventDefault();
-          return;
-        }
+      const panel = activePanel();
+      if (panel && panelCanScroll(panel, direction)) {
+        const step = event.key.startsWith("Arrow")
+          ? 80
+          : Math.max(160, panel.clientHeight * 0.8);
+        panel.scrollBy({
+          top: direction * step,
+          behavior: reducedMotionQuery.matches ? "auto" : "smooth",
+        });
+        event.preventDefault();
+        return;
       }
-
       if (goToPanel(activeIndexRef.current + direction)) event.preventDefault();
     };
 
-    const resizeObserver = new ResizeObserver(syncFooterHeight);
-    if (footer) resizeObserver.observe(footer);
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || performance.now() < transitionUntil) return;
+      touchStartY = event.touches[0].clientY;
+      touchStartScrollTop = activePanel()?.scrollTop ?? 0;
+    };
 
-    syncMode();
-    window.addEventListener("resize", syncMode);
-    window.addEventListener("scroll", syncNativeActivePanel, { passive: true });
+    const onTouchEnd = (event: TouchEvent) => {
+      if (touchStartY === undefined || event.changedTouches.length !== 1) return;
+      const distance = touchStartY - event.changedTouches[0].clientY;
+      touchStartY = undefined;
+      if (Math.abs(distance) < SWIPE_THRESHOLD || performance.now() < transitionUntil) return;
+
+      const direction: -1 | 1 = distance > 0 ? 1 : -1;
+      const panel = activePanel();
+      if (!panel) return;
+      const maxScroll = maxPanelScroll(panel);
+      const startedAtBoundary = direction > 0
+        ? touchStartScrollTop >= maxScroll - SCROLL_EDGE_EPSILON
+        : touchStartScrollTop <= SCROLL_EDGE_EPSILON;
+      const endedAtBoundary = direction > 0
+        ? panel.scrollTop >= maxScroll - SCROLL_EDGE_EPSILON
+        : panel.scrollTop <= SCROLL_EDGE_EPSILON;
+      if (startedAtBoundary && endedAtBoundary) {
+        goToPanel(activeIndexRef.current + direction);
+      }
+    };
+
+    const onTouchCancel = () => {
+      touchStartY = undefined;
+    };
+    const onPanelScroll = () => syncFooterVisibility();
+
+    const resizeObserver = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(scheduleSizeSync);
+    if (header) resizeObserver?.observe(header);
+    if (footer) resizeObserver?.observe(footer);
+    panelElements.forEach((panel) => resizeObserver?.observe(panel));
+    panelContentElements.forEach((content) => {
+      if (content) resizeObserver?.observe(content);
+    });
+
+    document.body.classList.add("home-panel-active");
+    syncAccessibility();
+    syncStageSize();
+    void document.fonts.ready.then(scheduleSizeSync);
+    document.fonts.addEventListener("loadingdone", scheduleSizeSync);
+    reducedMotionQuery.addEventListener("change", scheduleSizeSync);
+    window.addEventListener("resize", scheduleSizeSync);
+    window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
-    stage.addEventListener("wheel", onWheel, { passive: false });
-    finePointer.addEventListener("change", syncMode);
-    reducedMotion.addEventListener("change", syncMode);
+    stage.addEventListener("touchstart", onTouchStart, { passive: true });
+    stage.addEventListener("touchend", onTouchEnd, { passive: true });
+    stage.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    panelElements.forEach((panel) =>
+      panel.addEventListener("scroll", onPanelScroll, { passive: true }),
+    );
 
     return () => {
-      resizeObserver.disconnect();
-      window.clearTimeout(transitionTimer);
-      window.cancelAnimationFrame(scrollFrame ?? 0);
-      window.removeEventListener("resize", syncMode);
-      window.removeEventListener("scroll", syncNativeActivePanel);
+      disposed = true;
+      resizeObserver?.disconnect();
+      document.fonts.removeEventListener("loadingdone", scheduleSizeSync);
+      reducedMotionQuery.removeEventListener("change", scheduleSizeSync);
+      window.removeEventListener("resize", scheduleSizeSync);
+      window.removeEventListener("wheel", onWheel);
       window.removeEventListener("keydown", onKeyDown);
-      stage.removeEventListener("wheel", onWheel);
-      finePointer.removeEventListener("change", syncMode);
-      reducedMotion.removeEventListener("change", syncMode);
+      stage.removeEventListener("touchstart", onTouchStart);
+      stage.removeEventListener("touchend", onTouchEnd);
+      stage.removeEventListener("touchcancel", onTouchCancel);
+      panelElements.forEach((panel) => panel.removeEventListener("scroll", onPanelScroll));
+      window.clearTimeout(transitionTimer);
+      window.cancelAnimationFrame(sizeSyncFrame ?? 0);
+      stage.style.removeProperty("--home-panel-stage-height");
+      stage.style.removeProperty("--home-panel-footer-height");
       document.body.classList.remove(
-        "home-panel-enhanced",
+        "home-panel-active",
         "home-panel-at-end",
+        "home-panel-footer-visible",
       );
-      stage.style.removeProperty("--home-footer-height");
-      stage.style.removeProperty("--home-panel-index");
-      stage.dataset.activePanel = "1";
       panelElements.forEach((panel) => {
         panel.inert = false;
         panel.removeAttribute("aria-hidden");
-        panel.removeAttribute("data-panel-state");
       });
-      navigateRef.current = () => undefined;
+      if (footer) {
+        footer.inert = false;
+        footer.removeAttribute("aria-hidden");
+      }
     };
-  }, []);
+  }, [panelCount]);
 
   return (
-    <>
-      <nav
-        ref={controllerRef}
-        className="home-panel-nav"
-        aria-label="홈 섹션"
-      >
-        {PANEL_LABELS.map((label, index) => (
-          <button
-            key={label}
-            type="button"
-            aria-label={`${label} 섹션으로 이동`}
-            aria-current={index === activeIndex ? "step" : undefined}
-            className="home-panel-nav-button"
-            onClick={() => navigateRef.current(index)}
-          >
-            <span>{String(index + 1).padStart(2, "0")}</span>
-          </button>
-        ))}
-      </nav>
+    <div ref={stageRef} className="home-panel-stage" data-active-panel={activeIndex + 1}>
+      <div className="home-panel-track">
+        {panels.map((panel, index) => {
+          const isActive = index === activeIndex;
+          const isIncoming = transition?.to === index;
+          const isOutgoing = transition?.from === index;
+          const panelState = isIncoming
+            ? "incoming"
+            : isOutgoing
+              ? "outgoing"
+              : isActive
+                ? "active"
+                : "inactive";
+          return (
+            <div
+              className="home-panel-frame"
+              data-home-panel-index={index}
+              data-panel-state={panelState}
+              data-panel-direction={transition?.direction === 1 ? "next" : "previous"}
+              aria-hidden={isActive ? undefined : true}
+              inert={isActive ? undefined : true}
+              key={index}
+            >
+              {panel}
+            </div>
+          );
+        })}
+      </div>
+      <div className="home-panel-progress" style={progressStyle} aria-hidden="true">
+        <span className="home-panel-progress-number">
+          {String(activeIndex + 1).padStart(2, "0")} / {String(panelCount).padStart(2, "0")}
+        </span>
+        <span className="home-panel-progress-track">
+          <span className="home-panel-progress-fill" />
+        </span>
+      </div>
       <p className="sr-only" aria-live="polite" aria-atomic="true">
-        {PANEL_LABELS[activeIndex]} 섹션, {activeIndex + 1} / {PANEL_LABELS.length}
+        {String(activeIndex + 1).padStart(2, "0")} / {String(panelCount).padStart(2, "0")} 섹션
       </p>
-    </>
+    </div>
   );
 }

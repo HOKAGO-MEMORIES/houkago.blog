@@ -20,9 +20,7 @@ beforeEach(() => {
   vi.stubGlobal(
     "matchMedia",
     vi.fn((query: string) => ({
-      matches: query.includes("prefers-reduced-motion")
-        ? reducedMotion
-        : query.includes("pointer: fine"),
+      matches: query.includes("prefers-reduced-motion") && reducedMotion,
       media: query,
       onchange: null,
       addEventListener: vi.fn(),
@@ -32,13 +30,24 @@ beforeEach(() => {
       dispatchEvent: vi.fn(),
     })),
   );
-  Object.defineProperty(window, "innerWidth", {
+  Object.defineProperty(window, "innerHeight", {
     configurable: true,
-    value: 1280,
+    value: 900,
+  });
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    value: 0,
   });
   window.scrollTo = vi.fn();
-  HTMLElement.prototype.scrollIntoView = vi.fn();
   HTMLElement.prototype.scrollBy = vi.fn();
+  Object.defineProperty(document, "fonts", {
+    configurable: true,
+    value: {
+      ready: Promise.resolve(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    },
+  });
 });
 
 afterEach(() => {
@@ -49,90 +58,124 @@ afterEach(() => {
 });
 
 describe("HomePanelNavigator", () => {
-  it("moves at most one panel per wheel gesture and locks during transition", async () => {
+  it("uses a fixed stage, exposes progress, and moves one panel per gesture", async () => {
     const { container } = renderNavigator();
     const stage = container.querySelector<HTMLElement>(".home-panel-stage");
-    expect(stage).not.toBeNull();
-    expect(document.body.classList.contains("home-panel-enhanced")).toBe(true);
+    const panels = container.querySelectorAll<HTMLElement>("[data-home-panel-index]");
 
-    fireEvent.wheel(stage!, { deltaY: 40, deltaMode: 0 });
+    expect(document.body.classList.contains("home-panel-active")).toBe(true);
+    expect(screen.getByText("01 / 03")).not.toBeNull();
+    expect(stage?.style.getPropertyValue("--home-panel-stage-height")).toBe("900px");
+    expect(panels[0].inert).toBe(false);
+    expect(panels[1].inert).toBe(true);
+
+    fireEvent.wheel(window, { deltaY: 32, deltaMode: 0 });
+    expect(stage?.dataset.activePanel).toBe("2");
+    expect(screen.getByText("02 / 03")).not.toBeNull();
+    expect(panels[0].dataset.panelState).toBe("outgoing");
+    expect(panels[1].dataset.panelState).toBe("incoming");
+    expect(panels[0].getAttribute("aria-hidden")).toBe("true");
+
+    fireEvent.wheel(window, { deltaY: 80, deltaMode: 0 });
     expect(stage?.dataset.activePanel).toBe("2");
 
-    fireEvent.wheel(stage!, { deltaY: 80, deltaMode: 0 });
-    expect(stage?.dataset.activePanel).toBe("2");
-
-    await act(() => vi.advanceTimersByTimeAsync(900));
-    fireEvent.wheel(stage!, { deltaY: 40, deltaMode: 0 });
+    await act(() => vi.advanceTimersByTimeAsync(950));
+    fireEvent.wheel(window, { deltaY: 32, deltaMode: 0 });
     expect(stage?.dataset.activePanel).toBe("3");
-    expect(document.body.classList.contains("home-panel-at-end")).toBe(true);
+    expect(screen.getByText("03 / 03")).not.toBeNull();
   });
 
-  it("supports section navigator and Home/End keyboard movement", async () => {
+  it("consumes internal panel scroll before changing panels", () => {
     const { container } = renderNavigator();
-    const stage = container.querySelector<HTMLElement>(".home-panel-stage");
+    const firstPanel = container.querySelector<HTMLElement>("[data-home-panel-index='0']")!;
+    defineScrollMetrics(firstPanel, { clientHeight: 400, scrollHeight: 900 });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Recent Posts 섹션으로 이동" }),
-    );
-    expect(stage?.dataset.activePanel).toBe("3");
+    fireEvent.wheel(window, { deltaY: 120, deltaMode: 0 });
 
-    await act(() => vi.advanceTimersByTimeAsync(900));
-    fireEvent.keyDown(window, { key: "Home" });
-    expect(stage?.dataset.activePanel).toBe("1");
-
-    await act(() => vi.advanceTimersByTimeAsync(900));
-    fireEvent.keyDown(window, { key: "End" });
-    expect(stage?.dataset.activePanel).toBe("3");
+    expect(firstPanel.scrollTop).toBe(120);
+    expect(container.querySelector<HTMLElement>(".home-panel-stage")?.dataset.activePanel).toBe("1");
   });
 
-  it("keeps keyboard panel movement available while the navigator has focus", async () => {
-    const { container } = renderNavigator();
-    const stage = container.querySelector<HTMLElement>(".home-panel-stage");
-    const introButton = screen.getByRole("button", {
-      name: "Intro 섹션으로 이동",
-    });
-
-    introButton.focus();
-    fireEvent.keyDown(introButton, { key: "ArrowDown" });
-    expect(stage?.dataset.activePanel).toBe("2");
-
-    await act(() => vi.advanceTimersByTimeAsync(900));
-    fireEvent.keyDown(introButton, { key: "End" });
-    expect(stage?.dataset.activePanel).toBe("3");
-  });
-
-  it("disables wheel interception for reduced motion and keeps native section navigation", () => {
+  it("supports keyboard navigation and reduced-motion immediate transitions", () => {
     reducedMotion = true;
     const { container } = renderNavigator();
     const stage = container.querySelector<HTMLElement>(".home-panel-stage");
 
-    expect(document.body.classList.contains("home-panel-enhanced")).toBe(false);
-    fireEvent.wheel(stage!, { deltaY: 80, deltaMode: 0 });
-    expect(stage?.dataset.activePanel).toBe("1");
+    fireEvent.keyDown(window, { key: "End" });
+    expect(stage?.dataset.activePanel).toBe("3");
+    expect(container.querySelector("[data-panel-state='incoming']")).toBeNull();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Featured Projects 섹션으로 이동" }),
-    );
-    expect(stage?.dataset.activePanel).toBe("2");
-    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledOnce();
+    fireEvent.keyDown(window, { key: "Home" });
+    expect(stage?.dataset.activePanel).toBe("1");
+  });
+
+  it("moves on a boundary swipe and ignores a short swipe", async () => {
+    const { container } = renderNavigator();
+    const stage = container.querySelector<HTMLElement>(".home-panel-stage")!;
+
+    fireEvent.touchStart(stage, { touches: [{ clientY: 600 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientY: 570 }] });
+    expect(stage.dataset.activePanel).toBe("1");
+
+    fireEvent.touchStart(stage, { touches: [{ clientY: 600 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientY: 500 }] });
+    expect(stage.dataset.activePanel).toBe("2");
+
+    await act(() => vi.advanceTimersByTimeAsync(950));
+  });
+
+  it("keeps the footer inert until the final panel and reveals it when content fits", async () => {
+    const { container } = renderNavigator({ withFooter: true });
+    const footer = screen.getByTestId("footer");
+    const panels = container.querySelectorAll<HTMLElement>("[data-home-panel-index]");
+    const finalContent = panels[2].querySelector<HTMLElement>("[data-home-snap-section]")!;
+    defineScrollMetrics(panels[2], { clientHeight: 700, scrollHeight: 700 });
+    defineScrollMetrics(finalContent, { clientHeight: 500, scrollHeight: 500 });
+    vi.spyOn(footer, "getBoundingClientRect").mockReturnValue({
+      width: 1000,
+      height: 150,
+      top: 750,
+      right: 1000,
+      bottom: 900,
+      left: 0,
+      x: 0,
+      y: 750,
+      toJSON: () => ({}),
+    });
+
+    expect(footer.inert).toBe(true);
+    fireEvent.keyDown(window, { key: "End" });
+    await act(() => vi.runOnlyPendingTimersAsync());
+
+    expect(document.body.classList.contains("home-panel-footer-visible")).toBe(true);
+    expect(footer.inert).toBe(false);
+    expect(footer.hasAttribute("aria-hidden")).toBe(false);
   });
 });
 
-function renderNavigator() {
+function renderNavigator({ withFooter = false }: { withFooter?: boolean } = {}) {
   return render(
-    <div className="home-panel-stage" data-active-panel="1">
-      <div className="home-panel-track">
-        <div className="home-panel-frame" data-home-panel-frame>
-          <section>Intro</section>
-        </div>
-        <div className="home-panel-frame" data-home-panel-frame>
-          <section>Projects</section>
-        </div>
-        <div className="home-panel-frame" data-home-panel-frame>
-          <section>Posts</section>
-        </div>
-      </div>
-      <HomePanelNavigator />
-    </div>,
+    <>
+      <HomePanelNavigator>
+        <section data-home-snap-section>Intro</section>
+        <section data-home-snap-section>Projects</section>
+        <section data-home-snap-section>Posts</section>
+      </HomePanelNavigator>
+      {withFooter ? <footer data-site-footer data-testid="footer">Footer</footer> : null}
+    </>,
   );
+}
+
+function defineScrollMetrics(
+  element: HTMLElement,
+  metrics: { clientHeight: number; scrollHeight: number },
+) {
+  Object.defineProperty(element, "clientHeight", {
+    configurable: true,
+    value: metrics.clientHeight,
+  });
+  Object.defineProperty(element, "scrollHeight", {
+    configurable: true,
+    value: metrics.scrollHeight,
+  });
 }

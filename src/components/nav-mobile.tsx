@@ -4,7 +4,6 @@ import { useState } from "react";
 import { NavItem, navs } from "./nav";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "./ui/sheet";
-import { Menu } from "lucide-react";
 import { VisuallyHidden } from "./ui/visually-hidden";
 
 export default function NavMobile() {
@@ -16,12 +15,10 @@ export default function NavMobile() {
         <Button
           type="button"
           variant="ghost"
-          size="icon"
           title="메뉴"
-          className="hidden h-11 w-11 rounded-full text-muted-foreground shadow-none hover:bg-muted hover:text-foreground max-[760px]:inline-flex"
+          className="hidden h-11 rounded-full px-2 text-[13px] font-semibold text-muted-foreground shadow-none hover:bg-muted hover:text-foreground max-[760px]:inline-flex max-[420px]:px-1.5 max-[420px]:text-xs"
         >
-          <Menu className="h-5 w-5" aria-hidden="true" />
-          <span className="sr-only">메뉴 열기</span>
+          <span>{open ? "닫기" : "메뉴"}</span>
         </Button>
       </SheetTrigger>
       <SheetContent

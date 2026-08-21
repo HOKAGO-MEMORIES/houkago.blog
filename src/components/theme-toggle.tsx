@@ -13,7 +13,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="inline-flex min-h-11 items-center gap-2 rounded-full px-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="inline-flex min-h-11 items-center gap-2 rounded-full px-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-[420px]:gap-1.5 max-[420px]:px-1 max-[420px]:text-xs"
       aria-label="색상 테마 전환"
       title="색상 테마 전환"
     >
@@ -23,7 +23,7 @@ export default function ThemeToggle() {
       >
         <span className="h-[9px] w-[9px] rounded-full bg-[oklch(var(--foreground-soft))] transition-transform duration-200 dark:translate-x-3" />
       </span>
-      <span className="whitespace-nowrap max-[420px]:sr-only">
+      <span className="whitespace-nowrap">
         <span className="dark:hidden">어둡게</span>
         <span className="hidden dark:inline">밝게</span>
       </span>

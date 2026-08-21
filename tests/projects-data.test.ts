@@ -36,4 +36,17 @@ describe("project source of truth", () => {
       ),
     ).toBe(true);
   });
+
+  it("keeps the v38 featured and archive display order", () => {
+    expect(featuredProjects.map((project) => project.id)).toEqual([
+      "houkago-server",
+      "houkago-blog",
+      "boj-line123",
+    ]);
+    expect(archiveProjects.map((project) => project.id)).toEqual([
+      "the-way-home",
+      "discord-gacha-bot",
+      "legacy-github-blog",
+    ]);
+  });
 });
