@@ -44,7 +44,11 @@ describe("same-origin search route", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(routeMocks.fetchPostPage).toHaveBeenCalledWith(
       { q: "최솟값", page: 2, size: 7 },
-      { cache: "no-store", signal: request.signal },
+      {
+        cache: "no-store",
+        signal: request.signal,
+        onTiming: expect.any(Function),
+      },
     );
     await expect(response.json()).resolves.toEqual({
       items: [
@@ -68,6 +72,24 @@ describe("same-origin search route", () => {
       size: 2,
       totalPages: 2,
     });
+  });
+
+  it("exposes backend, parse, adapt, and total durations through Server-Timing", async () => {
+    routeMocks.fetchPostPage.mockImplementation(async (_input, options) => {
+      options.onTiming({
+        backendFetchMs: 96.2,
+        jsonParseMs: 1.1,
+        contractValidationMs: 0.4,
+      });
+      return backendPostPageFixture;
+    });
+
+    const response = await GET(new Request(`${ENDPOINT}?q=timing`));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("server-timing")).toMatch(
+      /^backend;dur=96\.2, parse;dur=1\.5, json;dur=1\.1, contract;dur=0\.4, adapt;dur=\d+\.\d, total;dur=\d+\.\d$/,
+    );
   });
 
   it("uses bounded page defaults and preserves an empty result", async () => {

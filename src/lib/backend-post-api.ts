@@ -33,7 +33,16 @@ export type BackendPostRequestOptions = {
   readonly cache?: "force-cache" | "no-store";
   readonly revalidate?: number | false;
   readonly signal?: AbortSignal;
+  readonly onTiming?: BackendPostTimingObserver;
 };
+
+export type BackendPostRequestTiming = {
+  readonly backendFetchMs: number;
+  readonly jsonParseMs: number;
+  readonly contractValidationMs: number;
+};
+
+export type BackendPostTimingObserver = (timing: BackendPostRequestTiming) => void;
 
 export type FetchPostPageInput = {
   readonly page: number;
@@ -148,23 +157,53 @@ export function createBackendPostApiClient({
       const requestOptions = searchQuery !== undefined && options === undefined
         ? { cache: "no-store" as const }
         : options;
+      const fetchStartedAt = performance.now();
       const response = await request(fetchImpl, url, endpoint, requestOptions);
+      const backendFetchMs = performance.now() - fetchStartedAt;
       ensureSuccessfulResponse(response, endpoint);
-      return parseBackendPostPage(await parseJson(response, endpoint));
+
+      const jsonStartedAt = performance.now();
+      const json = await parseJson(response, endpoint);
+      const jsonParseMs = performance.now() - jsonStartedAt;
+
+      const validationStartedAt = performance.now();
+      const page = parseBackendPostPage(json);
+      const contractValidationMs = performance.now() - validationStartedAt;
+      requestOptions?.onTiming?.({
+        backendFetchMs,
+        jsonParseMs,
+        contractValidationMs,
+      });
+      return page;
     },
 
     async fetchPostDetail(slug, options) {
       const normalizedSlug = validateSlug(slug);
       const endpoint = `/api/posts/${encodeURIComponent(normalizedSlug)}`;
       const url = new URL(`api/posts/${encodeURIComponent(normalizedSlug)}`, normalizedBaseUrl);
+      const fetchStartedAt = performance.now();
       const response = await request(fetchImpl, url, endpoint, options);
+      const backendFetchMs = performance.now() - fetchStartedAt;
 
       if (response.status === 404) {
         return null;
       }
 
       ensureSuccessfulResponse(response, endpoint);
-      return parseBackendPostDetail(await parseJson(response, endpoint));
+
+      const jsonStartedAt = performance.now();
+      const json = await parseJson(response, endpoint);
+      const jsonParseMs = performance.now() - jsonStartedAt;
+
+      const validationStartedAt = performance.now();
+      const detail = parseBackendPostDetail(json);
+      const contractValidationMs = performance.now() - validationStartedAt;
+      options?.onTiming?.({
+        backendFetchMs,
+        jsonParseMs,
+        contractValidationMs,
+      });
+      return detail;
     },
   };
 }

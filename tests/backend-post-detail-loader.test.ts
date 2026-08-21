@@ -29,7 +29,10 @@ describe("backend post detail loader", () => {
 
     const result = await loadDetail("synthetic-post");
 
-    expect(fetchDetail).toHaveBeenCalledWith("synthetic-post");
+    expect(fetchDetail).toHaveBeenCalledWith(
+      "synthetic-post",
+      expect.objectContaining({ onTiming: expect.any(Function) }),
+    );
     expect(result?.post).toMatchObject({
       slug: "synthetic-post",
       title: "Synthetic Post",
@@ -38,6 +41,36 @@ describe("backend post detail loader", () => {
     });
     expect(result?.mdxSource.compiledSource).toContain(
       "https://assets.example.test/assets/posts/synthetic-post/diagrams/flow.png",
+    );
+  });
+
+  it("logs stage timings without logging the raw body", async () => {
+    const fetchDetail = vi.fn<FetchPostDetail>().mockImplementation(async (_slug, options) => {
+      options?.onTiming?.({
+        backendFetchMs: 91.2,
+        jsonParseMs: 0.8,
+        contractValidationMs: 0.4,
+      });
+      return backendPostDetailFixture;
+    });
+    const logTiming = vi.fn();
+    const loadDetail = createBackendPostDetailLoader(fetchDetail, { logTiming });
+
+    await loadDetail("synthetic-post");
+
+    expect(logTiming).toHaveBeenCalledOnce();
+    expect(logTiming).toHaveBeenCalledWith({
+      event: "backend_post_detail_timing",
+      slug: "synthetic-post",
+      backendFetchMs: 91.2,
+      jsonParseMs: 0.8,
+      contractValidationMs: 0.4,
+      adapterMs: expect.any(Number),
+      mdxSerializationMs: expect.any(Number),
+      totalMs: expect.any(Number),
+    });
+    expect(JSON.stringify(logTiming.mock.calls[0][0])).not.toContain(
+      backendPostDetailFixture.rawBody,
     );
   });
 

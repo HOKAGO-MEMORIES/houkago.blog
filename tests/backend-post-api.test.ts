@@ -68,6 +68,35 @@ describe("backend post API success and contract parsing", () => {
     expect(result.content[0].tags).toEqual(["backend", "testing"]);
   });
 
+  it("reports fetch, JSON parse, and contract validation timing without changing fetch options", async () => {
+    const fetchMock = createFetchMock(jsonResponse(backendPostPageFixture));
+    const onTiming = vi.fn();
+    const client = createBackendPostApiClient({
+      baseUrl: "https://example.test",
+      fetchImpl: fetchMock,
+    });
+
+    await client.fetchPostPage({ page: 0, size: 2 }, { onTiming });
+
+    expect(onTiming).toHaveBeenCalledOnce();
+    expect(onTiming).toHaveBeenCalledWith({
+      backendFetchMs: expect.any(Number),
+      jsonParseMs: expect.any(Number),
+      contractValidationMs: expect.any(Number),
+    });
+    const timing = onTiming.mock.calls[0][0];
+    expect(timing.backendFetchMs).toBeGreaterThanOrEqual(0);
+    expect(timing.jsonParseMs).toBeGreaterThanOrEqual(0);
+    expect(timing.contractValidationMs).toBeGreaterThanOrEqual(0);
+
+    const call = readFetchCall(fetchMock);
+    expect(call.init?.next).toEqual({
+      revalidate: DEFAULT_POST_REVALIDATE_SECONDS,
+      tags: [BACKEND_POSTS_CACHE_TAG],
+    });
+    expect(call.init).not.toHaveProperty("onTiming");
+  });
+
   it.each([
     [undefined, "https://example.test/api/posts?page=0&size=3"],
     [true, "https://example.test/api/posts?page=0&size=3&featured=true"],

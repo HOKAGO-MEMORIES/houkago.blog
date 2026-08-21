@@ -4,6 +4,7 @@ import {
   BackendPostContractError,
   BackendPostHttpError,
   fetchPostPage,
+  type BackendPostRequestTiming,
 } from "@/lib/backend-post-api";
 import { adaptBackendPostPage } from "@/lib/backend-post-adapter";
 import {
@@ -17,6 +18,7 @@ const MAX_BACKEND_PAGE_SIZE = 50;
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
+  const totalStartedAt = performance.now();
   const url = new URL(request.url);
   const query = normalizeQuery(url.searchParams.get("q"));
   if (query === null) {
@@ -41,10 +43,23 @@ export async function GET(request: Request) {
   }
 
   try {
+    let requestTiming: BackendPostRequestTiming = {
+      backendFetchMs: 0,
+      jsonParseMs: 0,
+      contractValidationMs: 0,
+    };
     const backendPage = await fetchPostPage(
       { q: query, page, size },
-      { cache: "no-store", signal: request.signal },
+      {
+        cache: "no-store",
+        signal: request.signal,
+        onTiming: (timing) => {
+          requestTiming = timing;
+        },
+      },
     );
+
+    const adapterStartedAt = performance.now();
     const adaptedPage = adaptBackendPostPage(backendPage);
     const response: SearchResponse = {
       items: adaptedPage.posts.map((post) => ({
@@ -59,7 +74,11 @@ export async function GET(request: Request) {
       size: adaptedPage.pageSize,
       totalPages: adaptedPage.totalPages,
     };
-    return Response.json(response, { headers: noStoreHeaders() });
+    const adapterMs = performance.now() - adapterStartedAt;
+    const totalMs = performance.now() - totalStartedAt;
+    return Response.json(response, {
+      headers: successHeaders(requestTiming, adapterMs, totalMs),
+    });
   } catch (error) {
     if (error instanceof BackendPostHttpError && error.status >= 400 && error.status < 500) {
       return jsonError("Search request was rejected.", error.status);
@@ -107,4 +126,27 @@ function jsonError(error: string, status: number) {
 
 function noStoreHeaders() {
   return { "Cache-Control": "no-store" };
+}
+
+function successHeaders(
+  requestTiming: BackendPostRequestTiming,
+  adapterMs: number,
+  totalMs: number,
+) {
+  const parseMs = requestTiming.jsonParseMs + requestTiming.contractValidationMs;
+  return {
+    ...noStoreHeaders(),
+    "Server-Timing": [
+      formatServerTimingMetric("backend", requestTiming.backendFetchMs),
+      formatServerTimingMetric("parse", parseMs),
+      formatServerTimingMetric("json", requestTiming.jsonParseMs),
+      formatServerTimingMetric("contract", requestTiming.contractValidationMs),
+      formatServerTimingMetric("adapt", adapterMs),
+      formatServerTimingMetric("total", totalMs),
+    ].join(", "),
+  };
+}
+
+function formatServerTimingMetric(name: string, durationMs: number) {
+  return `${name};dur=${Math.max(0, durationMs).toFixed(1)}`;
 }
