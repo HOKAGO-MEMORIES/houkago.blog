@@ -50,7 +50,7 @@ vi.mock("@radix-ui/react-dialog", async () => {
         {children}
       </Context.Provider>
     ),
-    Trigger: ({ children }: { children: React.ReactElement }) => {
+    Trigger: ({ children }: { children: React.ReactElement<{ onClick?: () => void }> }) => {
       const { setOpen } = useDialog();
       return cloneWithClick(children, () => setOpen(true));
     },
@@ -64,7 +64,7 @@ vi.mock("@radix-ui/react-dialog", async () => {
       return open ? <div role="dialog" {...props}>{children}</div> : null;
     },
     Title: (props: React.HTMLAttributes<HTMLHeadingElement>) => <h2 {...props} />,
-    Close: ({ children }: { children: React.ReactElement }) => {
+    Close: ({ children }: { children: React.ReactElement<{ onClick?: () => void }> }) => {
       const { setOpen } = useDialog();
       return cloneWithClick(children, () => setOpen(false));
     },
