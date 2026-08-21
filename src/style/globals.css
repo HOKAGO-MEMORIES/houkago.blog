@@ -4,68 +4,79 @@
 
 @layer base {
   :root {
-    --background: 176 45% 96%; 
-    --foreground: 176 55% 35%; 
-    --card: 176 45% 96%; 
-    --card-foreground: 176 55% 20%; 
-    --popover: 176 45% 96%; 
-    --popover-foreground: 176 55% 20%; 
-    
-    --primary: 176 55% 50%; 
-    --primary-foreground: 176 70% 95%; 
-    --secondary: 174 45% 85%; 
-    --secondary-foreground: 176 55% 30%; 
-    
-    --muted: 174 45% 90%; 
-    --muted-foreground: 176 45% 40%; 
-    --accent: 176 55% 50%; 
-    --accent-foreground: 0 0% 100%; 
-    
-    --destructive: 0 70% 55%; 
-    --destructive-foreground: 0 0% 100%; 
-    
-    --border: 176 40% 85%; 
-    --input: 176 40% 85%; 
-    --ring: 176 55% 50%; 
-    
-    --chart-1: 12 76% 61%; 
-    --chart-2: 176 55% 50%; 
-    --chart-3: 197 37% 24%; 
-    --chart-4: 43 74% 66%; 
-    --chart-5: 27 87% 67%; 
-    
-    --radius: 0.5rem; 
+    --background: 97.6% 0.01 192.2;
+    --surface: 100% 0 0;
+    --surface-soft: 94.8% 0.018 191;
+    --foreground: 26% 0.035 188.8;
+    --foreground-soft: 39.1% 0.058 188.8;
+    --muted-foreground: 49% 0.048 189;
+    --border: 86% 0.032 191.7;
+    --border-strong: 70% 0.052 190;
+    --brand: 67% 0.13 184;
+    --brand-ink: 22% 0.055 186;
+    --secondary-color: 68% 0.085 232;
+    --success: 64% 0.12 151;
+    --warning: 75% 0.12 78;
+    --danger: 62% 0.19 28;
+
+    --card: var(--surface);
+    --card-foreground: var(--foreground);
+    --popover: var(--surface);
+    --popover-foreground: var(--foreground);
+    --primary: var(--brand);
+    --primary-foreground: var(--brand-ink);
+    --secondary: var(--secondary-color);
+    --secondary-foreground: var(--brand-ink);
+    --muted: var(--surface-soft);
+    --accent: var(--brand);
+    --accent-foreground: var(--brand-ink);
+    --destructive: var(--danger);
+    --destructive-foreground: 98% 0.005 190;
+    --input: var(--border);
+    --ring: var(--secondary-color);
+
+    --chart-1: var(--brand);
+    --chart-2: var(--secondary-color);
+    --chart-3: var(--success);
+    --chart-4: var(--warning);
+    --chart-5: var(--danger);
+
+    --font-body: var(--font-pretendard);
+    --font-display: var(--font-maru-buri);
+    --font-mono: var(--font-jetbrains-mono);
+    --font-code: var(--font-jetbrains-mono), var(--font-pretendard);
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --layout-gutter: clamp(1rem, 4vw, 2rem);
+    --content-width: 48rem;
+    --wide-content-width: 86.25rem;
+    --header-height: 4.75rem;
+    --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-lg: 0.75rem;
   }
+
   .dark {
-    --background: 176 55% 10%; 
-    --foreground: 176 45% 85%; 
-    --card: 176 55% 15%; 
-    --card-foreground: 176 55% 90%; 
-    --popover: 176 55% 15%; 
-    --popover-foreground: 176 55% 85%; 
-
-    --primary: 176 55% 50%; 
-    --primary-foreground: 176 55% 90%; 
-    --secondary: 176 45% 35%; 
-    --secondary-foreground: 176 55% 85%; 
-
-    --muted: 176 45% 20%; 
-    --muted-foreground: 176 45% 60%; 
-    --accent: 176 55% 50%; 
-    --accent-foreground: 176 45% 90%; 
-
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 70% 85%;
-
-    --border: 176 45% 25%; 
-    --input: 176 45% 25%; 
-    --ring: 176 55% 50%; 
-
-    --chart-1: 12 76% 50%; 
-    --chart-2: 176 55% 50%; 
-    --chart-3: 197 45% 25%; 
-    --chart-4: 43 55% 40%; 
-    --chart-5: 27 67% 35%; 
+    --background: 17% 0.024 190;
+    --surface: 20.5% 0.028 190;
+    --surface-soft: 24% 0.03 190;
+    --foreground: 91% 0.018 188;
+    --foreground-soft: 79% 0.034 188;
+    --muted-foreground: 68% 0.038 189;
+    --border: 28% 0.028 190;
+    --border-strong: 42% 0.038 190;
+    --brand: 72% 0.12 184;
+    --brand-ink: 16% 0.032 188;
+    --secondary-color: 72% 0.08 232;
+    --success: 70% 0.12 151;
+    --warning: 79% 0.12 78;
+    --danger: 68% 0.18 28;
   }
 }
 
@@ -79,13 +90,30 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-code);
+  }
 }
 
 @layer components {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-technical {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
   .prose code::before,
   .prose code::after,
   .prose pre code::before,

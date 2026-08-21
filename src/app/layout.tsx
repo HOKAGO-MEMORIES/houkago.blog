@@ -4,7 +4,7 @@ import "katex/dist/katex.min.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
-import { pretendard } from "@/style/fonts/fonts";
+import { jetBrainsMono, maruBuri, pretendard } from "@/style/fonts/fonts";
 import GoogleAnalytics from "@/lib/google-analytics"; 
 
 export default function RootLayout({
@@ -13,7 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko" className={pretendard.className} suppressHydrationWarning>
+    <html
+      lang="ko"
+      className={`${pretendard.className} ${pretendard.variable} ${maruBuri.variable} ${jetBrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider
           attribute="class"

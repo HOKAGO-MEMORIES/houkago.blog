@@ -9,7 +9,7 @@ export default function Home() {
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
             HOUKAGO
           </p>
-          <h1 className="text-5xl font-black tracking-tight text-primary sm:text-6xl">
+          <h1 className="font-display text-5xl font-semibold tracking-normal text-primary sm:text-6xl">
             꿈을 꾸는 개발자입니다
           </h1>
           <p className="max-w-xl text-base leading-7 text-muted-foreground">

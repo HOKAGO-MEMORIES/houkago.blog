@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">방과후 블로그 로고</title>
+  <desc id="description">김이 오르는 찻잔에 단색 촉의 연필이 꽂힌 로고</desc>
+  <defs>
+    <clipPath id="clip-pencil-above-rim" clipPathUnits="userSpaceOnUse">
+      <path d="M0 0H64V26.7H50.65C36.7 32.8 19.1 35 10.6 31.7H0Z" />
+    </clipPath>
+  </defs>
+  <g fill="none" stroke="#111111" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18.5 24.8C14.8 21.8 15 18.3 18 15.4C21.1 12.4 21.2 9.4 18.8 6.9" stroke-width="4.8" />
+    <path d="M31.2 23C27.6 19.3 28.3 15.8 31.3 12.6C34.1 9.7 34.4 6.9 32.2 4.6" stroke-width="4.8" />
+    <g clip-path="url(#clip-pencil-above-rim)">
+      <path d="M46.73 13.95L53.15 9.4L51.08 16.81Z" fill="#111111" stroke="none" />
+      <path d="M33.57 34L46.73 13.95L53.15 9.4L51.08 16.81L39.79 34" stroke-width="3.7" />
+      <path d="M46.73 13.95L51.08 16.81" stroke-width="3.1" />
+    </g>
+    <path d="M10.6 31.7C19.1 35 36.7 32.8 50.65 26.7" stroke-width="5" />
+    <path d="M13.9 38.3C15 49.7 23.6 56.2 34.5 55.2C43.8 54.4 49.5 47.7 48.9 37.7" stroke-width="5" />
+    <path d="M49.2 36.2C56.5 32.7 59.6 37.2 57.1 42.3C55.7 45.2 53.1 47.2 49.3 47.8" stroke-width="5" />
+  </g>
+</svg>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Home, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { NavItem, navs } from "./nav";
@@ -41,15 +42,20 @@ export default function Header() {
 
 function Logo() {
     return (
-        <Link href="/" className="font-extrabold">
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-none shadow-none text-primary hover:bg-transparent hover:text-foreground"
-            >
-                <Home className="h-5 w-5 transition-colors" strokeWidth={2.25} />
-            </Button>
+        <Link
+            href="/"
+            aria-label="방과후 홈"
+            className="inline-flex min-h-11 items-center gap-2 text-foreground transition-colors hover:text-primary"
+        >
+            <Image
+                src="/logo.svg"
+                alt=""
+                width={32}
+                height={32}
+                priority
+                className="h-8 w-8 shrink-0 dark:invert"
+            />
+            <span className="text-sm font-semibold tracking-[0.08em]">방과후</span>
         </Link>
     );
 }
