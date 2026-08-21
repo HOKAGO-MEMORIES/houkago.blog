@@ -10,6 +10,12 @@ import {
   isCategorySegment,
 } from "@/lib/post-navigation";
 
+export const revalidate = 300;
+
+export function generateStaticParams(): Array<{ slug: string; page: string }> {
+  return [];
+}
+
 export default async function BlogCategoryPaginationPage({
   params,
 }: {

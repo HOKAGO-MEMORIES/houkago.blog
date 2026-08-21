@@ -10,6 +10,10 @@ import { POSTS_PER_PAGE, getArchiveRoute } from "@/lib/post-navigation";
 
 export const revalidate = 300;
 
+export function generateStaticParams(): Array<{ page: string }> {
+  return [];
+}
+
 export default async function BlogArchivePage({
   params,
 }: {

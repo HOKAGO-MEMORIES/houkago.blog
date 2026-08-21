@@ -9,6 +9,12 @@ import {
   getTagRoute,
 } from "@/lib/post-navigation";
 
+export const revalidate = 300;
+
+export function generateStaticParams(): Array<{ tag: string; page: string }> {
+  return [];
+}
+
 export default async function BlogTagPaginationPage({
   params,
 }: {

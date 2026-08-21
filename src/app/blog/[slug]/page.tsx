@@ -25,6 +25,12 @@ import {
   toSeoDate,
 } from "@/lib/site";
 
+export const revalidate = 300;
+
+export function generateStaticParams(): Array<{ slug: string }> {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {
