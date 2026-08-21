@@ -152,7 +152,7 @@ describe("HomePanelNavigator", () => {
     expect(footer.hasAttribute("aria-hidden")).toBe(false);
   });
 
-  it("rounds fractional remaining scroll distance without widening the footer edge", () => {
+  it("reveals the footer on a new wheel gesture at a fractional boundary", async () => {
     reducedMotion = true;
     const { container } = renderNavigator({ withFooter: true });
     const footer = screen.getByTestId("footer");
@@ -174,24 +174,48 @@ describe("HomePanelNavigator", () => {
     });
 
     fireEvent.keyDown(window, { key: "End" });
-    finalPanel.scrollTop = 356.9;
+    let actualScrollTop = 330;
+    Object.defineProperty(finalPanel, "scrollTop", {
+      configurable: true,
+      get: () => actualScrollTop,
+      set: (value: number) => {
+        actualScrollTop = Math.max(0, Math.min(357.5, value));
+      },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(1_000));
+
     fireEvent.scroll(finalPanel);
 
     expect(document.body.classList.contains("home-panel-footer-visible")).toBe(false);
     expect(footer.inert).toBe(true);
     expect(footer.getAttribute("aria-hidden")).toBe("true");
 
-    finalPanel.scrollTop = 357.5;
+    fireEvent.wheel(window, { deltaY: 27.5, deltaMode: 0 });
     fireEvent.scroll(finalPanel);
 
+    expect(finalPanel.scrollTop).toBe(357.5);
+    expect(document.body.classList.contains("home-panel-footer-visible")).toBe(false);
+    expect(footer.inert).toBe(true);
+    expect(footer.getAttribute("aria-hidden")).toBe("true");
+
+    fireEvent.wheel(window, { deltaY: 4, deltaMode: 0 });
+
+    expect(finalPanel.scrollTop).toBe(357.5);
+    expect(document.body.classList.contains("home-panel-footer-visible")).toBe(false);
+
+    await act(() => vi.advanceTimersByTimeAsync(150));
+    fireEvent.wheel(window, { deltaY: 28, deltaMode: 0 });
+
+    expect(finalPanel.scrollTop).toBe(357.5);
     expect(document.body.classList.contains("home-panel-footer-visible")).toBe(true);
     expect(footer.inert).toBe(false);
     expect(footer.hasAttribute("aria-hidden")).toBe(false);
     expect(window.scrollY).toBe(0);
 
-    finalPanel.scrollTop = 332.5;
+    fireEvent.wheel(window, { deltaY: -30, deltaMode: 0 });
     fireEvent.scroll(finalPanel);
 
+    expect(finalPanel.scrollTop).toBe(327.5);
     expect(document.body.classList.contains("home-panel-footer-visible")).toBe(false);
     expect(footer.inert).toBe(true);
     expect(footer.getAttribute("aria-hidden")).toBe("true");

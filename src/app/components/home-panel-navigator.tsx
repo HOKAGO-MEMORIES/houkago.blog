@@ -80,6 +80,7 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
     let footerVisible = false;
     let footerVisibilityInitialized = false;
     let footerRevealScrollTop = 0;
+    let footerRevealDeferredByWheel = false;
 
     const activePanel = () => panelElements[activeIndexRef.current];
     const maxPanelScroll = (panel: HTMLElement) =>
@@ -89,6 +90,7 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
       if (footerVisibilityInitialized && footerVisible === visible) return;
       footerVisibilityInitialized = true;
       footerVisible = visible;
+      if (visible) footerRevealDeferredByWheel = false;
       footerRevealScrollTop = visible ? revealScrollTop : 0;
       document.body.classList.toggle("home-panel-footer-visible", visible);
       if (!footer) return;
@@ -120,8 +122,11 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
       }
 
       const distanceFromEnd = Math.max(0, maxPanelScroll(panel) - panel.scrollTop);
-      const normalizedDistanceFromEnd = normalizeRemainingScrollDistance(distanceFromEnd);
-      if (!footerVisible && normalizedDistanceFromEnd <= FOOTER_EDGE_EPSILON) {
+      if (
+        !footerVisible &&
+        !footerRevealDeferredByWheel &&
+        distanceFromEnd <= FOOTER_EDGE_EPSILON
+      ) {
         setFooterVisibility(true, panel.scrollTop);
       } else if (
         footerVisible &&
@@ -231,9 +236,27 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
       return true;
     }
 
-    function consumePanelScroll(panel: HTMLElement, delta: number) {
+    function consumePanelScroll(
+      panel: HTMLElement,
+      delta: number,
+      startsNewGesture: boolean,
+    ) {
       const direction: -1 | 1 = delta > 0 ? 1 : -1;
+      const distanceFromEnd = Math.max(0, maxPanelScroll(panel) - panel.scrollTop);
+      if (
+        direction > 0 &&
+        startsNewGesture &&
+        activeIndexRef.current === panelCount - 1 &&
+        !footerVisible &&
+        normalizeRemainingScrollDistance(distanceFromEnd) <= FOOTER_EDGE_EPSILON
+      ) {
+        setFooterVisibility(true, panel.scrollTop);
+        resetWheelAccumulation(true);
+        return true;
+      }
       if (!panelCanScroll(panel, direction)) return false;
+      footerRevealDeferredByWheel =
+        direction > 0 && activeIndexRef.current === panelCount - 1 && !footerVisible;
       panel.scrollTop = Math.max(0, Math.min(maxPanelScroll(panel), panel.scrollTop + delta));
       resetWheelAccumulation(true);
       return true;
@@ -260,6 +283,7 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
         transitionSawDecay &&
         absoluteDelta >= MIN_RESTART_DELTA &&
         absoluteDelta >= lastAbsoluteDelta * REACCELERATION_RATIO;
+      const startsNewGesture = wheelGap > NEW_GESTURE_GAP || isReacceleration;
 
       if (now < transitionUntil) {
         if (transitionPeakDelta > 0 && absoluteDelta <= transitionPeakDelta * DECAY_RATIO) {
@@ -272,13 +296,12 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
       }
 
       const panel = activePanel();
-      if (panel && consumePanelScroll(panel, verticalDelta)) {
+      if (panel && consumePanelScroll(panel, verticalDelta, startsNewGesture)) {
         lastWheelAt = now;
         lastAbsoluteDelta = absoluteDelta;
         return;
       }
 
-      const startsNewGesture = wheelGap > NEW_GESTURE_GAP || isReacceleration;
       lastWheelAt = now;
       lastAbsoluteDelta = absoluteDelta;
       if (startsNewGesture) {
@@ -301,6 +324,7 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (performance.now() < transitionUntil || isInteractiveTarget(event.target)) return;
+      footerRevealDeferredByWheel = false;
       if (event.key === "Home" || event.key === "End") {
         const target = event.key === "Home" ? 0 : panelCount - 1;
         if (goToPanel(target)) event.preventDefault();
@@ -337,6 +361,7 @@ export default function HomePanelNavigator({ children }: HomePanelNavigatorProps
 
     const onTouchStart = (event: TouchEvent) => {
       if (event.touches.length !== 1 || performance.now() < transitionUntil) return;
+      footerRevealDeferredByWheel = false;
       touchStartY = event.touches[0].clientY;
       touchStartScrollTop = activePanel()?.scrollTop ?? 0;
     };
