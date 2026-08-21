@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { connection } from "next/server";
-import PageLayout from "@/components/page-layout";
-import RecentPosts from "@/app/components/recent-posts";
-import CategoryHighlightsSection from "@/app/blog/components/category-highlights-section";
-import FeaturedPostsSection from "@/app/blog/components/featured-posts-section";
-import PaginationNav from "@/app/blog/components/pagination-nav";
-import PostListSection from "@/app/blog/components/post-list-section";
+import BlogListingPage from "@/app/blog/components/blog-listing-page";
 import { loadBackendCategoryHighlights } from "@/lib/backend-category-highlights-loader";
-import { loadBackendFeaturedPosts } from "@/lib/backend-featured-post-loader";
 import { loadBackendPostPage } from "@/lib/backend-post-page-loader";
 import {
-  BLOG_CATEGORIES,
   POSTS_PER_PAGE,
   getArchiveRoute,
-  getCategoryRoute,
 } from "@/lib/post-navigation";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/site";
 
@@ -51,63 +42,27 @@ export const metadata: Metadata = {
 export default async function BlogPage() {
   await connection();
 
-  const [archive, featuredPosts, categoryHighlights] = await Promise.all([
+  const [archive, categoryHighlights] = await Promise.all([
     loadBackendPostPage({
       frontendPage: 1,
       pageSize: POSTS_PER_PAGE,
     }),
-    loadBackendFeaturedPosts(),
     loadBackendCategoryHighlights(),
   ]);
+  const featuredPost = archive.posts.find((post) => post.featured);
+  const archivePosts = featuredPost
+    ? archive.posts.filter((post) => post.slug !== featuredPost.slug)
+    : archive.posts;
 
   return (
-    <PageLayout
-      title="Blog"
-      description="방과후 블로그의 입구 페이지입니다. 추천 글, 최근 글, 카테고리 하이라이트를 먼저 둘러본 뒤 전체 글로 이어질 수 있습니다."
-      className="gap-14"
-    >
-      <section className="grid gap-4 sm:grid-cols-2">
-        {BLOG_CATEGORIES.map((category) => {
-          const count = categoryHighlights.find((group) => group.category === category)?.count ?? 0;
-          return (
-            <Link
-              key={category}
-              href={getCategoryRoute(category)}
-              className="rounded-2xl border p-5 transition-colors hover:border-primary hover:bg-card/70"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{category}</p>
-              <h2 className="mt-2 text-2xl font-bold text-primary">{count} posts</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                카테고리별 아카이브로 바로 이동해 해당 주제의 글을 이어서 탐색할 수 있습니다.
-              </p>
-            </Link>
-          );
-        })}
-      </section>
-
-      <FeaturedPostsSection posts={featuredPosts} />
-
-      <RecentPosts
-        posts={archive.posts}
-        title="Recent Posts"
-        description="최근 공개된 글을 시간순으로 빠르게 훑어볼 수 있습니다."
-      />
-
-      <CategoryHighlightsSection highlights={categoryHighlights} />
-
-      <PostListSection
-        id="all-posts"
-        kicker="Archive"
-        title="All Posts"
-        description={`전체 공개 글 ${archive.totalItems}개를 ${POSTS_PER_PAGE}개 단위로 나눠서 보여줍니다.`}
-        posts={archive.posts}
-      />
-
-      <PaginationNav
-        currentPage={archive.currentPage}
-        totalPages={archive.totalPages}
-        getPageHref={getArchiveRoute}
-      />
-    </PageLayout>
+    <BlogListingPage
+      posts={archivePosts}
+      totalItems={archive.totalItems}
+      currentPage={archive.currentPage}
+      totalPages={archive.totalPages}
+      getPageHref={getArchiveRoute}
+      categoryHighlights={categoryHighlights}
+      featuredPost={featuredPost}
+    />
   );
 }

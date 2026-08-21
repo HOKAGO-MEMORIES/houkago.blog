@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const routeMocks = vi.hoisted(() => ({
   notFound: vi.fn(),
   loadBackendCategoryPostPage: vi.fn(),
+  loadBackendCategoryHighlights: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -13,11 +14,17 @@ vi.mock("@/lib/backend-category-post-loader", () => ({
   loadBackendCategoryPostPage: routeMocks.loadBackendCategoryPostPage,
 }));
 
+vi.mock("@/lib/backend-category-highlights-loader", () => ({
+  loadBackendCategoryHighlights: routeMocks.loadBackendCategoryHighlights,
+}));
+
 vi.mock("@/lib/post-navigation", () => ({
-  POSTS_PER_PAGE: 25,
+  BLOG_CATEGORIES: ["algorithm", "project", "cs", "blog"],
   getCategoryPageRoute: (category: string, page: number) =>
     page <= 1 ? `/blog/${category}` : `/blog/${category}/page/${page}`,
-  getCategorySummary: (category: string) => `${category} summary`,
+  getCategoryDisplayLabel: (category: string) => category,
+  getCategoryRoute: (category: string) => `/blog/${category}`,
+  getPostRoute: (post: { slug: string }) => `/blog/${post.slug}`,
   isCategorySegment: (segment: string) =>
     ["algorithm", "project", "cs", "blog"].includes(segment),
 }));
@@ -66,6 +73,7 @@ beforeEach(() => {
     throw new Error("NEXT_NOT_FOUND");
   });
   routeMocks.loadBackendCategoryPostPage.mockResolvedValue(categoryPage());
+  routeMocks.loadBackendCategoryHighlights.mockResolvedValue([]);
 });
 
 describe("blog category pagination route", () => {
@@ -75,11 +83,12 @@ describe("blog category pagination route", () => {
     });
 
     expect(routeMocks.loadBackendCategoryPostPage).toHaveBeenCalledWith("algorithm", 2);
-    expect(result.props.children[0].props.posts.map((post: { slug: string }) => post.slug)).toEqual([
+    expect(result.props.posts.map((post: { slug: string }) => post.slug)).toEqual([
       "page-two-new",
       "page-two-old",
     ]);
-    expect(result.props.children[0].props.description).toContain("51개");
+    expect(result.props.totalItems).toBe(51);
+    expect(result.props.activeCategory).toBe("algorithm");
   });
 
   it("renders a valid last page", async () => {
@@ -97,7 +106,7 @@ describe("blog category pagination route", () => {
       params: Promise.resolve({ slug: "algorithm", page: "3" }),
     });
 
-    expect(result.type).toBe("div");
+    expect(result.props.currentPage).toBe(3);
     expect(routeMocks.notFound).not.toHaveBeenCalled();
   });
 

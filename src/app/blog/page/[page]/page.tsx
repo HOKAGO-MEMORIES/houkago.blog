@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import PageLayout from "@/components/page-layout";
-import PaginationNav from "@/app/blog/components/pagination-nav";
-import PostListSection from "@/app/blog/components/post-list-section";
+import BlogListingPage from "@/app/blog/components/blog-listing-page";
+import { loadBackendCategoryHighlights } from "@/lib/backend-category-highlights-loader";
 import {
   loadBackendPostPage,
   parsePaginatedBlogPageParam,
@@ -26,32 +25,26 @@ export default async function BlogArchivePage({
     notFound();
   }
 
-  const archive = await loadBackendPostPage({
-    frontendPage: pageNumber,
-    pageSize: POSTS_PER_PAGE,
-  });
+  const [archive, categoryHighlights] = await Promise.all([
+    loadBackendPostPage({
+      frontendPage: pageNumber,
+      pageSize: POSTS_PER_PAGE,
+    }),
+    loadBackendCategoryHighlights(),
+  ]);
 
   if (archive.outOfRange) {
     notFound();
   }
 
   return (
-    <PageLayout
-      title="Blog Archive"
-      description="블로그 허브 이후의 전체 글 페이지입니다."
-    >
-      <PostListSection
-        kicker="Archive"
-        title={`All Posts · Page ${archive.currentPage}`}
-        description={`전체 공개 글 ${archive.totalItems}개를 ${POSTS_PER_PAGE}개 단위로 보여줍니다.`}
-        posts={archive.posts}
-      />
-
-      <PaginationNav
-        currentPage={archive.currentPage}
-        totalPages={archive.totalPages}
-        getPageHref={getArchiveRoute}
-      />
-    </PageLayout>
+    <BlogListingPage
+      posts={archive.posts}
+      totalItems={archive.totalItems}
+      currentPage={archive.currentPage}
+      totalPages={archive.totalPages}
+      getPageHref={getArchiveRoute}
+      categoryHighlights={categoryHighlights}
+    />
   );
 }

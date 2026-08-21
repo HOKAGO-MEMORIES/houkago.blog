@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import PaginationNav from "@/app/blog/components/pagination-nav";
-import PostListSection from "@/app/blog/components/post-list-section";
+import BlogListingPage from "@/app/blog/components/blog-listing-page";
 import { blogMDXComponents } from "@/components/mdx/blog-components";
 import { MDXContent } from "@/components/mdx-content";
+import { loadBackendCategoryHighlights } from "@/lib/backend-category-highlights-loader";
 import { loadBackendCategoryPostPage } from "@/lib/backend-category-post-loader";
 import { loadBackendPostDetail } from "@/lib/backend-post-detail-loader";
 import {
-  POSTS_PER_PAGE,
   getCategoryPageRoute,
   getCategorySummary,
   getCategoryRoute,
@@ -125,25 +124,25 @@ export default async function BlogSegmentPage({
   const { slug } = await params;
 
   if (isCategorySegment(slug)) {
-    const pagination = await loadBackendCategoryPostPage(slug, 1);
+    const [pagination, categoryHighlights] = await Promise.all([
+      loadBackendCategoryPostPage(slug, 1),
+      loadBackendCategoryHighlights(),
+    ]);
     if (pagination.outOfRange) {
       notFound();
     }
 
     return (
-      <div className="flex flex-col gap-6">
-        <PostListSection
-          kicker="Category"
-          title={slug.toUpperCase()}
-          description={`${getCategorySummary(slug)} 현재 공개된 글은 ${pagination.totalItems}개이며, ${POSTS_PER_PAGE}개 단위로 나눠서 보여줍니다.`}
-          posts={pagination.posts}
-        />
-        <PaginationNav
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          getPageHref={(page) => getCategoryPageRoute(slug, page)}
-        />
-      </div>
+      <BlogListingPage
+        posts={pagination.posts}
+        totalItems={pagination.totalItems}
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        getPageHref={(page) => getCategoryPageRoute(slug, page)}
+        categoryHighlights={categoryHighlights}
+        activeCategory={slug}
+        emptyMessage="이 카테고리에 표시할 글이 없습니다."
+      />
     );
   }
 

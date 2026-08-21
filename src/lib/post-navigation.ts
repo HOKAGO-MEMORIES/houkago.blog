@@ -3,6 +3,14 @@ import { getCategoryDescription } from "@/lib/site";
 
 export const BLOG_CATEGORIES: readonly Category[] = ["algorithm", "project", "cs", "blog"];
 export const POSTS_PER_PAGE = 25;
+export type BlogCategoryFilter = Category | "all";
+
+const BLOG_CATEGORY_LABELS: Record<Category, string> = {
+  algorithm: "알고리즘",
+  project: "프로젝트",
+  cs: "CS",
+  blog: "블로그",
+};
 
 export function isCategorySegment(segment: string): segment is Category {
   return BLOG_CATEGORIES.includes(segment as Category);
@@ -18,6 +26,10 @@ export function getArchiveRoute(page = 1) {
 
 export function getCategoryRoute(category: Category) {
   return `/blog/${category}`;
+}
+
+export function getCategoryDisplayLabel(category: Category) {
+  return BLOG_CATEGORY_LABELS[category];
 }
 
 export function getCategoryPageRoute(category: Category, page = 1) {

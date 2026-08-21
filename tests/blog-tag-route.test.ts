@@ -67,9 +67,9 @@ describe("blog tag route", () => {
     });
 
     expect(routeMocks.loadBackendTagPostPage).toHaveBeenCalledWith("graph", 1);
-    expect(result.props.children[1].props.posts.map((post: { slug: string }) => post.slug))
+    expect(result.props.posts.map((post: { slug: string }) => post.slug))
       .toEqual(["graph-new", "graph-old"]);
-    expect(result.props.children[0].props.children[2].props.children).toContain(27);
+    expect(result.props.description).toContain("27개");
   });
 
   it("decodes a Unicode route segment before loading", async () => {
@@ -121,9 +121,9 @@ describe("blog tag pagination route", () => {
     });
 
     expect(routeMocks.loadBackendTagPostPage).toHaveBeenCalledWith("algorithm", 2);
-    expect(result.props.children[1].props.posts.map((post: { slug: string }) => post.slug))
+    expect(result.props.posts.map((post: { slug: string }) => post.slug))
       .toEqual(["graph-new", "graph-old"]);
-    expect(result.props.children[0].props.children[2].props.children).toContain(27);
+    expect(result.props.description).toContain("27개");
   });
 
   it("renders a valid last page", async () => {

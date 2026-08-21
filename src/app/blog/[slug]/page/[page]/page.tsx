@@ -1,12 +1,10 @@
 import { notFound } from "next/navigation";
-import PaginationNav from "@/app/blog/components/pagination-nav";
-import PostListSection from "@/app/blog/components/post-list-section";
+import BlogListingPage from "@/app/blog/components/blog-listing-page";
+import { loadBackendCategoryHighlights } from "@/lib/backend-category-highlights-loader";
 import { loadBackendCategoryPostPage } from "@/lib/backend-category-post-loader";
 import { parsePaginatedBlogPageParam } from "@/lib/backend-post-page-loader";
 import {
-  POSTS_PER_PAGE,
   getCategoryPageRoute,
-  getCategorySummary,
   isCategorySegment,
 } from "@/lib/post-navigation";
 
@@ -28,25 +26,25 @@ export default async function BlogCategoryPaginationPage({
     notFound();
   }
 
-  const pagination = await loadBackendCategoryPostPage(slug, pageNumber);
+  const [pagination, categoryHighlights] = await Promise.all([
+    loadBackendCategoryPostPage(slug, pageNumber),
+    loadBackendCategoryHighlights(),
+  ]);
 
   if (pagination.outOfRange) {
     notFound();
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <PostListSection
-        kicker="Category"
-        title={`${slug.toUpperCase()} · Page ${pagination.currentPage}`}
-        description={`${getCategorySummary(slug)} 현재 공개된 글은 ${pagination.totalItems}개이며, ${POSTS_PER_PAGE}개 단위로 나눠서 보여줍니다.`}
-        posts={pagination.posts}
-      />
-      <PaginationNav
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        getPageHref={(currentPage) => getCategoryPageRoute(slug, currentPage)}
-      />
-    </div>
+    <BlogListingPage
+      posts={pagination.posts}
+      totalItems={pagination.totalItems}
+      currentPage={pagination.currentPage}
+      totalPages={pagination.totalPages}
+      getPageHref={(currentPage) => getCategoryPageRoute(slug, currentPage)}
+      categoryHighlights={categoryHighlights}
+      activeCategory={slug}
+      emptyMessage="이 카테고리에 표시할 글이 없습니다."
+    />
   );
 }

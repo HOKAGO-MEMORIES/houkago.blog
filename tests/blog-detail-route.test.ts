@@ -4,6 +4,7 @@ const routeMocks = vi.hoisted(() => ({
   notFound: vi.fn(),
   loadBackendPostDetail: vi.fn(),
   loadBackendCategoryPostPage: vi.fn(),
+  loadBackendCategoryHighlights: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -18,10 +19,15 @@ vi.mock("@/lib/backend-category-post-loader", () => ({
   loadBackendCategoryPostPage: routeMocks.loadBackendCategoryPostPage,
 }));
 
+vi.mock("@/lib/backend-category-highlights-loader", () => ({
+  loadBackendCategoryHighlights: routeMocks.loadBackendCategoryHighlights,
+}));
+
 vi.mock("@/lib/post-navigation", () => ({
-  POSTS_PER_PAGE: 25,
+  BLOG_CATEGORIES: ["algorithm", "project", "cs", "blog"],
   getCategoryPageRoute: (category: string, page: number) =>
     page <= 1 ? `/blog/${category}` : `/blog/${category}/page/${page}`,
+  getCategoryDisplayLabel: (category: string) => category,
   getCategorySummary: (category: string) => `${category} summary`,
   getCategoryRoute: (category: string) => `/blog/${category}`,
   getPostRoute: (post: { slug: string }) => `/blog/${post.slug}`,
@@ -68,6 +74,7 @@ beforeEach(() => {
     throw new Error("NEXT_NOT_FOUND");
   });
   routeMocks.loadBackendPostDetail.mockResolvedValue(loadedDetail);
+  routeMocks.loadBackendCategoryHighlights.mockResolvedValue([]);
   routeMocks.loadBackendCategoryPostPage.mockResolvedValue({
     posts: [
       { ...loadedDetail.post, slug: "category-new" },
@@ -92,9 +99,9 @@ describe("blog detail route backend cutover", () => {
       params: Promise.resolve({ slug: "algorithm" }),
     });
 
-    expect(result.type).toBe("div");
+    expect(result.props.activeCategory).toBe("algorithm");
     expect(routeMocks.loadBackendCategoryPostPage).toHaveBeenCalledWith("algorithm", 1);
-    expect(result.props.children[0].props.posts.map((post: { slug: string }) => post.slug)).toEqual([
+    expect(result.props.posts.map((post: { slug: string }) => post.slug)).toEqual([
       "category-new",
       "category-old",
     ]);
@@ -129,7 +136,7 @@ describe("blog detail route backend cutover", () => {
       params: Promise.resolve({ slug: "project" }),
     });
 
-    expect(result.type).toBe("div");
+    expect(result.props.posts).toEqual([]);
     expect(routeMocks.notFound).not.toHaveBeenCalled();
     expect(routeMocks.loadBackendPostDetail).not.toHaveBeenCalled();
   });

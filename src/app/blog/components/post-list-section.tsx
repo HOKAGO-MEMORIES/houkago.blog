@@ -1,7 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import type { FrontendPostSummary } from "@/lib/backend-post-adapter";
-import { getPostRoute } from "@/lib/post-navigation";
+import {
+  getCategoryDisplayLabel,
+  getPostRoute,
+} from "@/lib/post-navigation";
 
 type PostListItem = Pick<
   FrontendPostSummary,
@@ -10,9 +13,8 @@ type PostListItem = Pick<
 
 interface PostListSectionProps {
   title?: string;
-  posts: PostListItem[];
-  kicker?: string;
-  description?: string;
+  posts: readonly PostListItem[];
+  count?: string;
   id?: string;
   emptyMessage?: string;
 }
@@ -20,69 +22,43 @@ interface PostListSectionProps {
 export default function PostListSection({
   title,
   posts,
-  kicker,
-  description,
+  count,
   id,
   emptyMessage = "표시할 글이 없습니다.",
 }: PostListSectionProps) {
   return (
-    <section id={id} className="flex flex-col gap-4">
-      {kicker || title || description ? (
-        <div className="flex flex-col gap-2">
-          {kicker ? (
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              {kicker}
-            </p>
-          ) : null}
-          {title ? (
-            <h2 className="text-4xl font-extrabold text-primary">{title}</h2>
-          ) : null}
-          {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          ) : null}
-        </div>
+    <section id={id} className="blog-archive-section">
+      {title || count ? (
+        <header className="blog-toolbar">
+          {title ? <h2>{title}</h2> : <span />}
+          {count ? <span>{count}</span> : null}
+        </header>
       ) : null}
 
       {posts.length === 0 ? (
-        <div className="rounded-2xl border px-5 py-8 text-sm text-muted-foreground">
-          {emptyMessage}
+        <div className="blog-empty-state">
+          <h3>{emptyMessage}</h3>
         </div>
       ) : (
-        <div className="flex flex-col">
+        <div className="blog-post-list">
           {posts.map((post) => (
             <Link
               href={getPostRoute(post)}
               key={post.slug}
-              className="flex items-center justify-between gap-4 border-b py-5 last:border-none"
+              className="blog-post-row group"
             >
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border px-2 py-0.5 text-xs font-semibold uppercase text-primary">
-                    {post.category}
-                  </span>
-                  {post.featured ? (
-                    <span className="text-xs font-semibold text-primary">
-                      FEATURED
-                    </span>
-                  ) : null}
-                </div>
-                <span className="text-lg font-semibold text-primary">
-                  {post.title}
-                </span>
-                <span className="break-all text-sm text-muted-foreground">
-                  {post.description}
-                </span>
-                <time className="text-xs">{post.date}</time>
+              <div className="blog-post-meta">
+                <time dateTime={post.date}>{post.date.replaceAll("-", ".")}</time>
+                <span>{getCategoryDisplayLabel(post.category)}</span>
               </div>
-              {post.thumbnail ? (
-                <Image
-                  width={144}
-                  height={144}
-                  src={post.thumbnail}
-                  alt={post.title}
-                  className="hidden h-24 w-24 rounded-xl object-cover sm:block"
-                />
-              ) : null}
+              <div className="blog-post-copy">
+                <h3>{post.title}</h3>
+                <p>{post.description}</p>
+              </div>
+              <ArrowRight
+                className="post-arrow h-4 w-4 group-hover:translate-x-1 group-focus-visible:translate-x-1"
+                aria-hidden="true"
+              />
             </Link>
           ))}
         </div>
