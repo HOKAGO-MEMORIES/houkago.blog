@@ -167,78 +167,86 @@ export default async function BlogSegmentPage({
   const categoryLabel = getCategoryDisplayLabel(post.category);
 
   return (
-    <article className="post-detail-page">
+    <>
       <PostReadingProgress targetId={articleBodyId} />
 
-      <nav className="post-detail-breadcrumb" aria-label="현재 위치">
-        <Link href="/blog">기록 보관함</Link>
-        <span aria-hidden="true">/</span>
-        <Link href={getCategoryRoute(post.category)}>{categoryLabel}</Link>
-      </nav>
-
-      <header className="post-detail-hero">
-        <div className="post-detail-kicker">
+      <article className="post-detail-page">
+        <nav className="post-detail-breadcrumb" aria-label="현재 위치">
+          <Link href="/blog">블로그</Link>
+          <span aria-hidden="true">/</span>
           <Link href={getCategoryRoute(post.category)}>{categoryLabel}</Link>
-          <span aria-hidden="true">·</span>
-          <time dateTime={post.date}>{formatPostDate(post.date)}</time>
-          <span aria-hidden="true">·</span>
-          <span>{readingMinutes}분 읽기</span>
-        </div>
-        <h1>{post.title}</h1>
-        <p>{post.description}</p>
-        {post.tags.length > 0 && (
-          <div className="post-detail-tags" aria-label="태그">
-            {post.tags.map((tag) => (
-              <Link key={tag} href={getTagRoute(tag)}>
-                #{tag}
-              </Link>
-            ))}
+        </nav>
+
+        <header className="post-detail-hero">
+          <div className="post-detail-kicker">
+            <span>{formatCategoryNoteLabel(post.category)}</span>
+            <time dateTime={post.date}>{formatPostDate(post.date)}</time>
+            <span>약 {readingMinutes}분</span>
           </div>
-        )}
-      </header>
-
-      <div className="post-detail-layout">
-        <aside className="post-detail-context" aria-label="글 정보">
-          <Link className="post-detail-back" href="/blog">
-            <ArrowLeft aria-hidden="true" />
-            기록 보관함
-          </Link>
-          <dl>
-            <div>
-              <dt>분류</dt>
-              <dd>{categoryLabel}</dd>
+          <h1>{post.title}</h1>
+          <p>{post.description}</p>
+          {post.tags.length > 0 && (
+            <div className="post-detail-tags" aria-label="태그">
+              {post.tags.map((tag) => (
+                <Link key={tag} href={getTagRoute(tag)}>
+                  #{tag}
+                </Link>
+              ))}
             </div>
-            <div>
-              <dt>게시</dt>
-              <dd>{formatPostDate(post.date)}</dd>
-            </div>
-            {post.updated ? (
-              <div>
-                <dt>수정</dt>
-                <dd>{formatPostDate(post.updated)}</dd>
-              </div>
-            ) : null}
-            {post.series ? (
-              <div>
-                <dt>연재</dt>
-                <dd>{post.series}</dd>
-              </div>
-            ) : null}
-          </dl>
-        </aside>
+          )}
+        </header>
 
-        <MDXContent
-          id={articleBodyId}
-          mdxSource={mdxSource}
-          components={mdxComponents}
-        />
+        <div className="post-detail-layout">
+          <div className="post-detail-context-rail">
+            <Link className="post-detail-back" href="/blog">
+              <ArrowLeft aria-hidden="true" />
+              아카이브로 돌아가기
+            </Link>
 
-        <PostTableOfContents items={tableOfContents} />
-      </div>
-    </article>
+            <aside className="post-detail-context" aria-label="글 정보">
+              <span className="post-detail-aside-label">글 정보</span>
+              <dl>
+                <div>
+                  <dt>분류</dt>
+                  <dd>{categoryLabel}</dd>
+                </div>
+                <div>
+                  <dt>기록</dt>
+                  <dd>{formatPostDate(post.date)}</dd>
+                </div>
+                {post.updated ? (
+                  <div>
+                    <dt>수정</dt>
+                    <dd>{formatPostDate(post.updated)}</dd>
+                  </div>
+                ) : null}
+                {post.series ? (
+                  <div>
+                    <dt>연재</dt>
+                    <dd>{post.series}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </aside>
+          </div>
+
+          <MDXContent
+            id={articleBodyId}
+            mdxSource={mdxSource}
+            components={mdxComponents}
+          />
+
+          <PostTableOfContents items={tableOfContents} />
+        </div>
+      </article>
+    </>
   );
 }
 
 function formatPostDate(date: string) {
   return date.replaceAll("-", ".");
+}
+
+function formatCategoryNoteLabel(category: string) {
+  return `${category.replaceAll("-", " ").toUpperCase()} NOTE`;
 }

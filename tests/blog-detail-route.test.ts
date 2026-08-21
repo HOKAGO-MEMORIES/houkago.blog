@@ -149,7 +149,18 @@ describe("blog detail route backend cutover", () => {
       params: Promise.resolve({ slug: "synthetic-post" }),
     });
 
-    expect(result.type).toBe("article");
+    const article = result.props.children[1];
+    const [breadcrumb, hero, layout] = article.props.children;
+
+    expect(article.type).toBe("article");
+    expect(article.props.className).toBe("post-detail-page");
+    expect(breadcrumb.props.children[0].props.children).toBe("블로그");
+    expect(hero.props.children[0].props.children[0].props.children).toBe(
+      "BLOG NOTE",
+    );
+    expect(layout.props.children[0].props.className).toBe(
+      "post-detail-context-rail",
+    );
     expect(metadata).toMatchObject({
       title: "Synthetic Post | 방과후 블로그",
       description: "Backend detail route fixture.",
