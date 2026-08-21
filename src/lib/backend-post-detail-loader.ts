@@ -10,7 +10,14 @@ import {
   type BackendPostApiClient,
   type BackendPostRequestTiming,
 } from "@/lib/backend-post-api";
-import { getSerializedMDX } from "@/lib/mdx";
+import {
+  getSerializedMDX,
+  type PostMdxSerializationTiming,
+} from "@/lib/mdx";
+import {
+  loadCachedPostMdx,
+  type CachedPostMdx,
+} from "@/lib/backend-post-mdx-cache";
 
 export type LoadedBackendPostDetail = {
   readonly post: FrontendPostDetail;
@@ -24,11 +31,15 @@ export type BackendPostDetailTiming = BackendPostRequestTiming & {
   readonly slug: string;
   readonly adapterMs: number;
   readonly mdxSerializationMs: number;
+  readonly mdxCacheAgeMs: number;
+  readonly mdxStages: PostMdxSerializationTiming;
   readonly totalMs: number;
 };
 
 type BackendPostDetailLoaderOptions = {
   readonly now?: () => number;
+  readonly epochNow?: () => number;
+  readonly loadMdx?: (rawBody: string, assetBaseUrl: string) => Promise<CachedPostMdx>;
   readonly logTiming?: (timing: BackendPostDetailTiming) => void;
 };
 
@@ -42,6 +53,8 @@ export function createBackendPostDetailLoader(
   fetchDetail: FetchPostDetail,
   {
     now = () => performance.now(),
+    epochNow = () => Date.now(),
+    loadMdx = loadUncachedPostMdx,
     logTiming = logProductionDetailTiming,
   }: BackendPostDetailLoaderOptions = {},
 ) {
@@ -62,9 +75,10 @@ export function createBackendPostDetailLoader(
     const adapterMs = now() - adapterStartedAt;
 
     const mdxStartedAt = now();
-    const mdxSource = await getSerializedMDX(post.rawBody, {
-      assetBaseUrl: post.assetBaseUrl,
-    });
+    const { mdxSource, mdxStages, generatedAtEpochMs } = await loadMdx(
+      post.rawBody,
+      post.assetBaseUrl,
+    );
     const mdxSerializationMs = now() - mdxStartedAt;
 
     logTiming({
@@ -73,6 +87,8 @@ export function createBackendPostDetailLoader(
       ...roundRequestTiming(requestTiming),
       adapterMs: roundMilliseconds(adapterMs),
       mdxSerializationMs: roundMilliseconds(mdxSerializationMs),
+      mdxCacheAgeMs: roundMilliseconds(epochNow() - generatedAtEpochMs),
+      mdxStages,
       totalMs: roundMilliseconds(now() - totalStartedAt),
     });
 
@@ -81,8 +97,33 @@ export function createBackendPostDetailLoader(
 }
 
 export const loadBackendPostDetail = cache(
-  createBackendPostDetailLoader(fetchPostDetail),
+  createBackendPostDetailLoader(fetchPostDetail, {
+    loadMdx: loadCachedPostMdx,
+  }),
 );
+
+async function loadUncachedPostMdx(
+  rawBody: string,
+  assetBaseUrl: string,
+): Promise<CachedPostMdx> {
+  let mdxStages: PostMdxSerializationTiming | null = null;
+  const mdxSource = await getSerializedMDX(rawBody, {
+    assetBaseUrl,
+    onTiming: (timing) => {
+      mdxStages = timing;
+    },
+  });
+
+  if (mdxStages === null) {
+    throw new Error("MDX serialization completed without stage timing.");
+  }
+
+  return {
+    mdxSource,
+    mdxStages,
+    generatedAtEpochMs: Date.now(),
+  };
+}
 
 function roundRequestTiming(timing: BackendPostRequestTiming): BackendPostRequestTiming {
   return {

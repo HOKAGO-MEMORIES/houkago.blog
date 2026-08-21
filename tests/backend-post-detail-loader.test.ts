@@ -67,6 +67,18 @@ describe("backend post detail loader", () => {
       contractValidationMs: 0.4,
       adapterMs: expect.any(Number),
       mdxSerializationMs: expect.any(Number),
+      mdxCacheAgeMs: expect.any(Number),
+      mdxStages: {
+        shikiReadyBeforeSerialize: expect.any(Boolean),
+        shikiInitializationMs: expect.toSatisfy(
+          (value: unknown) => value === null || typeof value === "number",
+        ),
+        assetRewriteMs: expect.any(Number),
+        rehypeKatexMs: expect.any(Number),
+        rehypePrettyCodeMs: expect.any(Number),
+        parseAndCompileMs: expect.any(Number),
+        totalMs: expect.any(Number),
+      },
       totalMs: expect.any(Number),
     });
     expect(JSON.stringify(logTiming.mock.calls[0][0])).not.toContain(

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { getSerializedMDX } from "@/lib/mdx";
 
@@ -56,5 +56,26 @@ const answer = 42;
     await expect(
       getSerializedMDX("![unsafe](./assets/../private.png)", { assetBaseUrl }),
     ).rejects.toThrow("must not traverse or escape");
+  });
+
+  it("reports bounded stage timings without exposing source content", async () => {
+    const source = "Inline math $x^2$ and `code`.\n\n```java\nint answer = 42;\n```";
+    const onTiming = vi.fn();
+
+    await getSerializedMDX(source, { assetBaseUrl, onTiming });
+
+    expect(onTiming).toHaveBeenCalledOnce();
+    expect(onTiming).toHaveBeenCalledWith({
+      shikiReadyBeforeSerialize: expect.any(Boolean),
+      shikiInitializationMs: expect.toSatisfy(
+        (value: unknown) => value === null || typeof value === "number",
+      ),
+      assetRewriteMs: expect.any(Number),
+      rehypeKatexMs: expect.any(Number),
+      rehypePrettyCodeMs: expect.any(Number),
+      parseAndCompileMs: expect.any(Number),
+      totalMs: expect.any(Number),
+    });
+    expect(JSON.stringify(onTiming.mock.calls[0][0])).not.toContain(source);
   });
 });
