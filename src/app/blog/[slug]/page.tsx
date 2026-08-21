@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import BlogListingPage from "@/app/blog/components/blog-listing-page";
+import PostReadingProgress from "@/app/blog/components/post-reading-progress";
+import PostTableOfContents from "@/app/blog/components/post-table-of-contents";
 import { blogMDXComponents } from "@/components/mdx/blog-components";
 import { MDXContent } from "@/components/mdx-content";
 import { loadBackendCategoryHighlights } from "@/lib/backend-category-highlights-loader";
@@ -9,12 +12,17 @@ import { loadBackendCategoryPostPage } from "@/lib/backend-category-post-loader"
 import { loadBackendPostDetail } from "@/lib/backend-post-detail-loader";
 import {
   getCategoryPageRoute,
+  getCategoryDisplayLabel,
   getCategorySummary,
   getCategoryRoute,
   getPostRoute,
   getTagRoute,
   isCategorySegment,
 } from "@/lib/post-navigation";
+import {
+  estimatePostReadingMinutes,
+  extractPostTableOfContents,
+} from "@/lib/post-headings";
 import {
   AUTHOR_NAME,
   DEFAULT_OG_IMAGE,
@@ -153,33 +161,84 @@ export default async function BlogSegmentPage({
 
   const { post, mdxSource } = detail;
   const mdxComponents = post.category === "blog" ? blogMDXComponents : undefined;
+  const tableOfContents = extractPostTableOfContents(post.rawBody);
+  const readingMinutes = estimatePostReadingMinutes(post.rawBody);
+  const articleBodyId = `post-body-${post.slug}`;
+  const categoryLabel = getCategoryDisplayLabel(post.category);
 
   return (
-    <article className="mt-5 flex flex-col gap-4">
-      <Link href={getCategoryRoute(post.category)} className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-        {post.category}
-      </Link>
-      <h1 className="whitespace-pre-wrap text-5xl font-black text-primary">{post.title}</h1>
-      <p className="text-base text-muted-foreground">{post.description}</p>
-      <div className="flex flex-wrap items-center gap-3 text-sm text-primary">
-        <time>{post.date}</time>
-        {post.updated && <span>Updated {post.updated}</span>}
-        {post.series && <span>Series {post.series}</span>}
-      </div>
-      {post.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
-            <Link
-              key={tag}
-              href={getTagRoute(tag)}
-              className="rounded-full border px-3 py-1 text-xs font-semibold text-primary transition-colors hover:border-primary"
-            >
-              #{tag}
-            </Link>
-          ))}
+    <article className="post-detail-page">
+      <PostReadingProgress targetId={articleBodyId} />
+
+      <nav className="post-detail-breadcrumb" aria-label="현재 위치">
+        <Link href="/blog">기록 보관함</Link>
+        <span aria-hidden="true">/</span>
+        <Link href={getCategoryRoute(post.category)}>{categoryLabel}</Link>
+      </nav>
+
+      <header className="post-detail-hero">
+        <div className="post-detail-kicker">
+          <Link href={getCategoryRoute(post.category)}>{categoryLabel}</Link>
+          <span aria-hidden="true">·</span>
+          <time dateTime={post.date}>{formatPostDate(post.date)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{readingMinutes}분 읽기</span>
         </div>
-      )}
-      <MDXContent mdxSource={mdxSource} components={mdxComponents} />
+        <h1>{post.title}</h1>
+        <p>{post.description}</p>
+        {post.tags.length > 0 && (
+          <div className="post-detail-tags" aria-label="태그">
+            {post.tags.map((tag) => (
+              <Link key={tag} href={getTagRoute(tag)}>
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <div className="post-detail-layout">
+        <aside className="post-detail-context" aria-label="글 정보">
+          <Link className="post-detail-back" href="/blog">
+            <ArrowLeft aria-hidden="true" />
+            기록 보관함
+          </Link>
+          <dl>
+            <div>
+              <dt>분류</dt>
+              <dd>{categoryLabel}</dd>
+            </div>
+            <div>
+              <dt>게시</dt>
+              <dd>{formatPostDate(post.date)}</dd>
+            </div>
+            {post.updated ? (
+              <div>
+                <dt>수정</dt>
+                <dd>{formatPostDate(post.updated)}</dd>
+              </div>
+            ) : null}
+            {post.series ? (
+              <div>
+                <dt>연재</dt>
+                <dd>{post.series}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </aside>
+
+        <MDXContent
+          id={articleBodyId}
+          mdxSource={mdxSource}
+          components={mdxComponents}
+        />
+
+        <PostTableOfContents items={tableOfContents} />
+      </div>
     </article>
   );
+}
+
+function formatPostDate(date: string) {
+  return date.replaceAll("-", ".");
 }

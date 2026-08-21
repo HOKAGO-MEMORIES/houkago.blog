@@ -8,6 +8,8 @@ describe("runtime post MDX serialization", () => {
   it("preserves supported Markdown semantics and rewrites post asset nodes", async () => {
     const source = `# Heading
 
+## Runtime Detail
+
 Paragraph with [an external link](https://example.test) and \`inline code\`.
 
 Inline math $x^2 + y^2 = z^2$.
@@ -30,6 +32,7 @@ const answer = 42;
     const result = await getSerializedMDX(source, { assetBaseUrl });
 
     expect(result.compiledSource).toContain("Heading");
+    expect(result.compiledSource).toContain('id: "runtime-detail"');
     expect(result.compiledSource).toContain('"data-language": "ts"');
     expect(result.compiledSource).toContain('children: " answer"');
     expect(result.compiledSource).toContain("https://example.test");

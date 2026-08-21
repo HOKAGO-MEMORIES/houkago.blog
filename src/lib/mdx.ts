@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { createHighlighter, type Highlighter } from "shiki";
 import { resolvePostAssetUrl } from "@/lib/post-asset-url";
+import { remarkPostHeadingAnchors } from "@/lib/post-headings";
 
 const POST_MDX_THEME = "nord";
 
@@ -59,13 +60,14 @@ export async function getSerializedMDX(
     rehypeKatexMs: 0,
     rehypePrettyCodeMs: 0,
   };
-  const remarkPlugins = options?.assetBaseUrl
-    ? [
-        remarkGfm,
-        remarkMath,
-        createPostAssetRewritePlugin(options.assetBaseUrl, timing, now),
-      ]
-    : [remarkGfm, remarkMath];
+  const remarkPlugins = [
+    remarkGfm,
+    remarkMath,
+    remarkPostHeadingAnchors,
+    ...(options?.assetBaseUrl
+      ? [createPostAssetRewritePlugin(options.assetBaseUrl, timing, now)]
+      : []),
+  ];
 
   const result = await serialize(content, {
     mdxOptions: {

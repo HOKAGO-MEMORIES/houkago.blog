@@ -6,7 +6,7 @@ import {
   type PostMdxSerializationTiming,
 } from "@/lib/mdx";
 
-const POST_MDX_CACHE_VERSION = "post-mdx-v1";
+const POST_MDX_CACHE_VERSION = "post-mdx-v2";
 const POST_MDX_CACHE_REVALIDATE_SECONDS = 86_400;
 
 export type CachedPostMdx = {

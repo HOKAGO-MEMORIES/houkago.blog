@@ -11,13 +11,14 @@ const MarkdownRenderer = dynamic(
 );
 
 interface MDXProps {
+  id?: string;
   mdxSource: MDXRemoteSerializeResult;
   components?: MDXComponents;
 }
 
-export const MDXContent = ({ mdxSource, components }: MDXProps) => {
+export const MDXContent = ({ id, mdxSource, components }: MDXProps) => {
   return (
-    <div className="prose flex-1 max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground prose-pre:text-foreground prose-a:text-primary">
+    <div id={id} className="post-body">
       <MarkdownRenderer mdxSource={mdxSource} components={components} />
     </div>
   );

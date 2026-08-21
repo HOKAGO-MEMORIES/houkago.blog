@@ -57,7 +57,7 @@ describe("backend post MDX Data Cache", () => {
 
     expect(second).toEqual(first);
     expect(cacheMocks.serialize).toHaveBeenCalledOnce();
-    expect(cacheMocks.keyParts).toEqual(["post-mdx-v1"]);
+    expect(cacheMocks.keyParts).toEqual(["post-mdx-v2"]);
     expect(cacheMocks.cacheOptions).toEqual({ revalidate: 86_400 });
   });
 

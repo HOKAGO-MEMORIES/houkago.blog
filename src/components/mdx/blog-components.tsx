@@ -26,13 +26,6 @@ type YouTubeProps = {
   title?: string;
 };
 
-const toneClasses: Record<Tone, string> = {
-  info: "border-sky-400/60 bg-sky-100/70 text-sky-950 dark:bg-sky-950/40 dark:text-sky-100",
-  success: "border-emerald-400/60 bg-emerald-100/70 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100",
-  warning: "border-amber-400/60 bg-amber-100/80 text-amber-950 dark:bg-amber-950/40 dark:text-amber-100",
-  danger: "border-rose-400/60 bg-rose-100/80 text-rose-950 dark:bg-rose-950/40 dark:text-rose-100",
-};
-
 function isAllowedPublicMediaSource(src: string) {
   return src.startsWith("/") || /^https?:\/\//i.test(src);
 }
@@ -43,22 +36,20 @@ export function Callout({
   children,
 }: CalloutProps) {
   return (
-    <div className={`my-6 rounded-2xl border px-5 py-4 ${toneClasses[tone]}`}>
-      <p className="m-0 text-sm font-bold uppercase tracking-[0.2em]">{title}</p>
-      <div className="mt-3 text-sm leading-7 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+    <aside className="post-callout" data-tone={tone}>
+      <p className="post-callout-title">{title}</p>
+      <div className="post-callout-body">
         {children}
       </div>
-    </div>
+    </aside>
   );
 }
 
 export function Aside({ title = "Aside", children }: AsideProps) {
   return (
-    <aside className="my-6 rounded-2xl border border-border/80 bg-muted/40 px-5 py-4">
-      <p className="m-0 text-sm font-semibold uppercase tracking-[0.16em] text-primary">
-        {title}
-      </p>
-      <div className="mt-3 text-sm leading-7 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+    <aside className="post-aside">
+      <p className="post-aside-title">{title}</p>
+      <div className="post-aside-body">
         {children}
       </div>
     </aside>
@@ -77,7 +68,7 @@ function toImageDimension(value: number | string | undefined) {
 export function ImageFigure({ src, alt, caption, width, height }: ImageFigureProps) {
   if (!isAllowedPublicMediaSource(src)) {
     return (
-      <p className="rounded-xl border border-destructive/60 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <p className="post-media-error">
         ImageFigure does not allow relative asset paths. Use a root-relative public path or an
         absolute URL.
       </p>
@@ -88,19 +79,19 @@ export function ImageFigure({ src, alt, caption, width, height }: ImageFigurePro
   const imageHeight = toImageDimension(height);
 
   return (
-    <figure className="my-8 flex flex-col items-center gap-3">
+    <figure className="post-image-figure">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
         width={imageWidth}
         height={imageHeight}
-        className="mx-auto h-auto max-h-[70vh] w-auto max-w-full rounded-2xl border object-contain"
+        className="post-image"
         loading="lazy"
         decoding="async"
       />
       {caption ? (
-        <figcaption className="text-center text-sm text-muted-foreground">
+        <figcaption>
           {caption}
         </figcaption>
       ) : null}
@@ -113,25 +104,22 @@ export function YouTube({ id, title = "YouTube video" }: YouTubeProps) {
 
   if (!/^[A-Za-z0-9_-]{11}$/.test(embedId)) {
     return (
-      <p className="rounded-xl border border-destructive/60 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <p className="post-media-error">
         YouTube requires a valid 11-character video id.
       </p>
     );
   }
 
   return (
-    <div className="my-8 overflow-hidden rounded-2xl border">
-      <div className="aspect-video">
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${embedId}`}
-          title={title}
-          className="h-full w-full"
-          loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        />
-      </div>
+    <div className="post-youtube">
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${embedId}`}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
     </div>
   );
 }
