@@ -2109,7 +2109,13 @@ body.home-panel-active .site-header {
     row-gap: 1.875rem;
   }
 
-  .post-detail-context-rail,
+  .post-detail-context-rail {
+    position: static;
+    width: 100%;
+    display: block;
+  }
+
+  .post-detail-context,
   .post-detail-toc {
     display: none;
   }
@@ -2145,6 +2151,7 @@ body.home-panel-active .site-header {
   }
 
   .post-detail-layout {
+    row-gap: 1.75rem;
     padding: 3.5rem 0 5rem;
   }
 

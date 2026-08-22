@@ -158,9 +158,15 @@ describe("blog detail route backend cutover", () => {
     expect(hero.props.children[0].props.children[0].props.children).toBe(
       "BLOG NOTE",
     );
-    expect(layout.props.children[0].props.className).toBe(
-      "post-detail-context-rail",
-    );
+    const contextRail = layout.props.children[0];
+    const archiveLink = contextRail.props.children[0];
+
+    expect(contextRail.props.className).toBe("post-detail-context-rail");
+    expect(archiveLink.props).toMatchObject({
+      className: "post-detail-back",
+      href: "/blog",
+    });
+    expect(archiveLink.props.children[1]).toBe("아카이브로 돌아가기");
     expect(metadata).toMatchObject({
       title: "Synthetic Post | 방과후 블로그",
       description: "Backend detail route fixture.",
