@@ -1476,11 +1476,15 @@ body.home-panel-active .site-header {
 }
 
 /* Open Design v38 detail and MDX reading system. */
+main > :has(> .post-detail-page) {
+  padding-bottom: 0;
+}
+
 .post-detail-page {
   position: relative;
   left: 50%;
   width: min(calc(100vw - 3rem), var(--wide-content-width));
-  margin: 0 0 8rem;
+  margin: 0;
   padding-top: 0.625rem;
   transform: translateX(-50%);
 }
@@ -2186,7 +2190,6 @@ body.home-panel-active .site-header {
 @media (max-width: 760px) {
   .post-detail-page {
     width: calc(100vw - 2rem);
-    margin-bottom: 5rem;
     padding-top: 0;
   }
 
