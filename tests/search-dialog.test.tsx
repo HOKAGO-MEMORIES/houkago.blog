@@ -101,19 +101,27 @@ afterEach(() => {
 });
 
 describe("SearchDialog", () => {
-  it("opens in idle state and does not request an empty query", () => {
+  it("opens with Korean accessible names, focuses the input, and omits legacy copy", () => {
     openDialog();
 
-    expect(screen.getByText("검색어를 입력하면 결과가 여기에 표시됩니다.")).toBeTruthy();
+    const input = screen.getByLabelText("글 검색");
+    expect(screen.getByRole("heading", { name: "검색" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "검색 닫기" })).toBeTruthy();
+    expect(input).toBe(document.activeElement);
+    expect(screen.getByText("검색어를 입력해 주세요.")).toBeTruthy();
+    expect(screen.queryByText("Search query")).toBeNull();
+    expect(
+      screen.queryByText("제목과 본문 내용을 기준으로 현재 공개된 글을 빠르게 찾을 수 있습니다."),
+    ).toBeNull();
     expect(searchMocks.fetchSearchResults).not.toHaveBeenCalled();
   });
 
   it("debounces input, shows loading, and renders Backend results in their order", async () => {
     openDialog();
-    const input = screen.getByLabelText("Search query");
+    const input = screen.getByLabelText("글 검색");
     fireEvent.change(input, { target: { value: "PriorityQueue" } });
 
-    expect(screen.getByText("검색 결과를 불러오는 중입니다.")).toBeTruthy();
+    expect(screen.getByText("검색 중…")).toBeTruthy();
     await act(() => vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS - 1));
     expect(searchMocks.fetchSearchResults).not.toHaveBeenCalled();
 
@@ -124,6 +132,9 @@ describe("SearchDialog", () => {
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(screen.getByText("BOJ 1002 - 터렛")).toBeTruthy();
+    expect(screen.getByText("알고리즘")).toBeTruthy();
+    expect(screen.getByText("2023.03.05")).toBeTruthy();
+    expect(screen.queryByText("algorithm")).toBeNull();
     expect(screen.getByText("검색 결과 1개")).toBeTruthy();
   });
 
@@ -139,7 +150,7 @@ describe("SearchDialog", () => {
       totalPages: 2,
     });
     openDialog();
-    fireEvent.change(screen.getByLabelText("Search query"), { target: { value: "최솟값" } });
+    fireEvent.change(screen.getByLabelText("글 검색"), { target: { value: "최솟값" } });
 
     await act(() => vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS));
 
@@ -156,14 +167,14 @@ describe("SearchDialog", () => {
       totalPages: 0,
     });
     openDialog();
-    fireEvent.change(screen.getByLabelText("Search query"), { target: { value: "unknown" } });
+    fireEvent.change(screen.getByLabelText("글 검색"), { target: { value: "unknown" } });
     await act(() => vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS));
 
-    expect(screen.getByText("일치하는 글이 없습니다.")).toBeTruthy();
+    expect(screen.getByText("검색 결과가 없습니다.")).toBeTruthy();
     expect(screen.getByText("검색 결과 0개")).toBeTruthy();
 
     searchMocks.fetchSearchResults.mockRejectedValueOnce(new Error("backend unavailable"));
-    fireEvent.change(screen.getByLabelText("Search query"), { target: { value: "unknown-2" } });
+    fireEvent.change(screen.getByLabelText("글 검색"), { target: { value: "unknown-2" } });
     await act(() => vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS));
 
     expect(screen.getByText("검색 결과를 불러오지 못했습니다.")).toBeTruthy();
@@ -176,7 +187,7 @@ describe("SearchDialog", () => {
       .mockReturnValueOnce(first.promise)
       .mockReturnValueOnce(second.promise);
     openDialog();
-    const input = screen.getByLabelText("Search query");
+    const input = screen.getByLabelText("글 검색");
 
     fireEvent.change(input, { target: { value: "java" } });
     await act(() => vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS));
@@ -204,7 +215,7 @@ describe("SearchDialog", () => {
 
   it("closes the dialog when a result is clicked", async () => {
     openDialog();
-    fireEvent.change(screen.getByLabelText("Search query"), { target: { value: "터렛" } });
+    fireEvent.change(screen.getByLabelText("글 검색"), { target: { value: "터렛" } });
     await act(() => vi.advanceTimersByTimeAsync(SEARCH_DEBOUNCE_MS));
 
     fireEvent.click(screen.getByRole("link", { name: /BOJ 1002 - 터렛/ }));
@@ -215,7 +226,7 @@ describe("SearchDialog", () => {
 
 function openDialog() {
   render(<SearchDialog />);
-  fireEvent.click(screen.getByRole("button", { name: "Open search" }));
+  fireEvent.click(screen.getByRole("button", { name: "검색" }));
 }
 
 function deferred<T>() {
