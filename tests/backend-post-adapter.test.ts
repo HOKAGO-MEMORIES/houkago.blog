@@ -70,8 +70,35 @@ describe("post response adapter", () => {
 
     expect(adapted.rawBody).toBe(backendPostDetailFixture.rawBody);
     expect(adapted.assetBaseUrl).toBe(backendPostDetailFixture.assetBaseUrl);
+    expect(adapted.platform).toBe("boj");
+    expect(adapted.problemId).toBe("2342");
+    expect(adapted.newerPost).toEqual({
+      slug: "newer-post",
+      title: "Newer Post",
+      date: "2026-07-15",
+    });
+    expect(adapted.olderPost).toEqual({
+      slug: "older-post",
+      title: "Older Post",
+      date: "2026-07-13",
+    });
     expect(adapted.tags).toEqual(backendPostDetailFixture.tags);
     expect(adapted.tags).not.toBe(backendPostDetailFixture.tags);
+  });
+
+  it("preserves nullable detail metadata and navigation boundaries", () => {
+    const adapted = adaptBackendPostDetail({
+      ...backendPostDetailFixture,
+      platform: null,
+      problemId: null,
+      newerPost: null,
+      olderPost: null,
+    });
+
+    expect(adapted.platform).toBeUndefined();
+    expect(adapted.problemId).toBeUndefined();
+    expect(adapted.newerPost).toBeNull();
+    expect(adapted.olderPost).toBeNull();
   });
 
   it("resolves a detail thumbnail against its public asset base URL", () => {

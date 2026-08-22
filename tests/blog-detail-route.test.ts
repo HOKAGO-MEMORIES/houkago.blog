@@ -58,8 +58,20 @@ const loadedDetail = {
     thumbnail: "https://assets.example.test/assets/posts/synthetic-post/cover.png",
     series: "Migration",
     featured: true,
+    platform: "boj",
+    problemId: "2342",
     rawBody: "# Runtime detail",
     assetBaseUrl: "https://assets.example.test/assets/posts/synthetic-post/",
+    newerPost: {
+      slug: "newer-post",
+      title: "Newer Post",
+      date: "2026-08-18",
+    },
+    olderPost: {
+      slug: "older-post",
+      title: "Older Post",
+      date: "2026-08-16",
+    },
   },
   mdxSource: {
     compiledSource: "return { default: function MDXContent() {} }",
@@ -167,6 +179,15 @@ describe("blog detail route backend cutover", () => {
       href: "/blog",
     });
     expect(archiveLink.props.children[1]).toBe("아카이브로 돌아가기");
+    const context = contextRail.props.children[1];
+    const informationRows = context.props.children[1].props.children;
+    expect(informationRows[1].props.children[0].props.children).toBe("플랫폼");
+    expect(informationRows[1].props.children[1].props.children).toBe("BOJ");
+    const navigation = article.props.children[3];
+    expect(navigation.props).toMatchObject({
+      olderPost: loadedDetail.post.olderPost,
+      newerPost: loadedDetail.post.newerPost,
+    });
     expect(metadata).toMatchObject({
       title: "Synthetic Post | 방과후 블로그",
       description: "Backend detail route fixture.",
@@ -182,6 +203,31 @@ describe("blog detail route backend cutover", () => {
     });
     expect(routeMocks.loadBackendPostDetail).toHaveBeenNthCalledWith(1, "synthetic-post");
     expect(routeMocks.loadBackendPostDetail).toHaveBeenNthCalledWith(2, "synthetic-post");
+  });
+
+  it("omits the platform row without creating problemId UI", async () => {
+    routeMocks.loadBackendPostDetail.mockResolvedValue({
+      ...loadedDetail,
+      post: {
+        ...loadedDetail.post,
+        platform: undefined,
+        problemId: "kept-in-domain-only",
+      },
+    });
+
+    const result = await BlogSegmentPage({
+      params: Promise.resolve({ slug: "synthetic-post" }),
+    });
+    const article = result.props.children[1];
+    const context = article.props.children[2].props.children[0].props.children[1];
+    const labels = context.props.children[1].props.children
+      .filter(Boolean)
+      .map((row: { props: { children: Array<{ props: { children: string } }> } }) =>
+        row.props.children[0].props.children,
+      );
+
+    expect(labels).not.toContain("플랫폼");
+    expect(labels).not.toContain("문제 번호");
   });
 
   it("maps only a missing backend detail result to notFound", async () => {

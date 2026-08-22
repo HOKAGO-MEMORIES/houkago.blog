@@ -37,8 +37,20 @@ export const nullableBackendPostListItemFixture: BackendPostListItem = {
 
 export const backendPostDetailFixture: BackendPostDetail = {
   ...backendPostListItemFixture,
+  platform: "boj",
+  problemId: "2342",
   rawBody: "# Synthetic body\n\nBody content is preserved.\n",
   assetBaseUrl: "https://assets.example.test/assets/posts/synthetic-post/",
+  newerPost: {
+    slug: "newer-post",
+    title: "Newer Post",
+    postDate: "2026-07-15",
+  },
+  olderPost: {
+    slug: "older-post",
+    title: "Older Post",
+    postDate: "2026-07-13",
+  },
 };
 
 export const backendPostPageFixture: BackendPostPage = {

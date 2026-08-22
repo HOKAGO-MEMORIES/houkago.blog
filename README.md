@@ -34,7 +34,9 @@ frontend build가 backend API 응답에 의존하지 않습니다. Backend URL�
 Public `/blog/[slug]` post detail과 metadata도 server-only Backend detail loader를 사용합니다. Backend
 `rawBody`는 기존 MDX renderer로 처리하고 `./assets/...`는 API의 `assetBaseUrl`로 resolve합니다. Detail
 `404`만 route not-found로 변환하며, 다른 Backend 오류에는 local generated body로 fallback하지 않습니다.
-Post slug는 frontend build에서 더 이상 열거하지 않고 요청 시 처리합니다.
+Detail 정보 rail은 canonical `platform`이 있을 때만 표시하고, 하단 이전/다음 navigation은 Backend의
+`olderPost`/`newerPost`를 global public order로 사용합니다. `problemId`는 transport/domain에는 유지하되
+별도 UI를 만들지 않습니다. Post slug는 frontend build에서 더 이상 열거하지 않고 요청 시 처리합니다.
 
 Category route와 pagination은 Backend `category` filter와 pagination metadata를 사용하며 Backend 순서를
 그대로 표시합니다. `/blog`의 category count와 Category Highlights도 네 category의 page 0 요청을 병렬로

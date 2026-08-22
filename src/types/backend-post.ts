@@ -12,8 +12,18 @@ export type BackendPostListItem = {
 };
 
 export type BackendPostDetail = BackendPostListItem & {
+  readonly platform: string | null;
+  readonly problemId: string | null;
   readonly rawBody: string;
   readonly assetBaseUrl: string;
+  readonly newerPost: BackendPostNavigationItem | null;
+  readonly olderPost: BackendPostNavigationItem | null;
+};
+
+export type BackendPostNavigationItem = {
+  readonly slug: string;
+  readonly title: string;
+  readonly postDate: string;
 };
 
 export type BackendSort = {

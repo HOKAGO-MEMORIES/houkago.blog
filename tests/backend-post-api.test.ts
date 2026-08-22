@@ -242,6 +242,10 @@ describe("backend post API success and contract parsing", () => {
     );
     expect(result?.rawBody).toBe(backendPostDetailFixture.rawBody);
     expect(result?.assetBaseUrl).toBe(backendPostDetailFixture.assetBaseUrl);
+    expect(result?.platform).toBe("boj");
+    expect(result?.problemId).toBe("2342");
+    expect(result?.newerPost?.slug).toBe("newer-post");
+    expect(result?.olderPost?.slug).toBe("older-post");
     expect(call.init?.next?.revalidate).toBe(DEFAULT_POST_REVALIDATE_SECONDS);
     expect(call.init?.next?.tags).toEqual([BACKEND_POSTS_CACHE_TAG]);
   });
@@ -288,6 +292,17 @@ describe("backend post API success and contract parsing", () => {
     [{ ...backendPostDetailFixture, rawBody: 42 }, "detail.rawBody"],
     [{ ...backendPostDetailFixture, assetBaseUrl: undefined }, "detail.assetBaseUrl"],
     [{ ...backendPostDetailFixture, assetBaseUrl: 42 }, "detail.assetBaseUrl"],
+    [{ ...backendPostDetailFixture, platform: undefined }, "detail.platform"],
+    [{ ...backendPostDetailFixture, platform: 42 }, "detail.platform"],
+    [{ ...backendPostDetailFixture, problemId: undefined }, "detail.problemId"],
+    [{ ...backendPostDetailFixture, problemId: 42 }, "detail.problemId"],
+    [{ ...backendPostDetailFixture, newerPost: undefined }, "detail.newerPost"],
+    [{ ...backendPostDetailFixture, newerPost: { slug: 42 } }, "detail.newerPost.slug"],
+    [{ ...backendPostDetailFixture, olderPost: undefined }, "detail.olderPost"],
+    [
+      { ...backendPostDetailFixture, olderPost: { slug: "older", title: "Older" } },
+      "detail.olderPost.postDate",
+    ],
   ])("rejects invalid detail contracts", async (body, expectedPath) => {
     const client = createBackendPostApiClient({
       baseUrl: "https://example.test",

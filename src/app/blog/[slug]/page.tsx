@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import BlogListingPage from "@/app/blog/components/blog-listing-page";
+import PostDetailNavigation from "@/app/blog/components/post-detail-navigation";
 import PostReadingProgress from "@/app/blog/components/post-reading-progress";
 import PostTableOfContents from "@/app/blog/components/post-table-of-contents";
 import { blogMDXComponents } from "@/components/mdx/blog-components";
@@ -210,6 +211,12 @@ export default async function BlogSegmentPage({
                   <dt>분류</dt>
                   <dd>{categoryLabel}</dd>
                 </div>
+                {post.platform ? (
+                  <div>
+                    <dt>플랫폼</dt>
+                    <dd>{post.platform.toUpperCase()}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt>기록</dt>
                   <dd>{formatPostDate(post.date)}</dd>
@@ -238,6 +245,11 @@ export default async function BlogSegmentPage({
 
           <PostTableOfContents items={tableOfContents} />
         </div>
+
+        <PostDetailNavigation
+          olderPost={post.olderPost}
+          newerPost={post.newerPost}
+        />
       </article>
     </>
   );

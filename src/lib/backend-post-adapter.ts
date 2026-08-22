@@ -26,8 +26,18 @@ export type FrontendPostSummary = {
 };
 
 export type FrontendPostDetail = FrontendPostSummary & {
+  readonly platform?: string;
+  readonly problemId?: string;
   readonly rawBody: string;
   readonly assetBaseUrl: string;
+  readonly newerPost: FrontendPostNavigationItem | null;
+  readonly olderPost: FrontendPostNavigationItem | null;
+};
+
+export type FrontendPostNavigationItem = {
+  readonly slug: string;
+  readonly title: string;
+  readonly date: string;
 };
 
 export type FrontendPostPage = {
@@ -78,8 +88,25 @@ export function adaptBackendPostDetail(post: BackendPostDetail): FrontendPostDet
     thumbnail: post.thumbnail
       ? resolvePostAssetUrl(post.thumbnail, assetBaseUrl)
       : undefined,
+    platform: toOptional(post.platform),
+    problemId: toOptional(post.problemId),
     rawBody: post.rawBody,
     assetBaseUrl,
+    newerPost: adaptBackendPostNavigationItem(post.newerPost),
+    olderPost: adaptBackendPostNavigationItem(post.olderPost),
+  };
+}
+
+function adaptBackendPostNavigationItem(
+  post: BackendPostDetail["newerPost"],
+): FrontendPostNavigationItem | null {
+  if (post === null) {
+    return null;
+  }
+  return {
+    slug: post.slug,
+    title: post.title,
+    date: post.postDate,
   };
 }
 

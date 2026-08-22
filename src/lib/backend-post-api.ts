@@ -4,6 +4,7 @@ import type {
   BackendPageable,
   BackendPostDetail,
   BackendPostListItem,
+  BackendPostNavigationItem,
   BackendPostPage,
   BackendSort,
 } from "@/types/backend-post";
@@ -370,8 +371,33 @@ function parseBackendPostDetail(value: unknown): BackendPostDetail {
   const object = readObject(value, path);
   return {
     ...parseBackendPostListItem(object, path),
+    platform: readNullableString(object.platform, `${path}.platform`),
+    problemId: readNullableString(object.problemId, `${path}.problemId`),
     rawBody: readString(object.rawBody, `${path}.rawBody`),
     assetBaseUrl: readString(object.assetBaseUrl, `${path}.assetBaseUrl`),
+    newerPost: parseNullableBackendPostNavigationItem(
+      object.newerPost,
+      `${path}.newerPost`,
+    ),
+    olderPost: parseNullableBackendPostNavigationItem(
+      object.olderPost,
+      `${path}.olderPost`,
+    ),
+  };
+}
+
+function parseNullableBackendPostNavigationItem(
+  value: unknown,
+  path: string,
+): BackendPostNavigationItem | null {
+  if (value === null) {
+    return null;
+  }
+  const object = readObject(value, path);
+  return {
+    slug: readString(object.slug, `${path}.slug`),
+    title: readString(object.title, `${path}.title`),
+    postDate: readString(object.postDate, `${path}.postDate`),
   };
 }
 
